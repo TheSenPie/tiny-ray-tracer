@@ -4,7 +4,7 @@
 #include "hittable.h"
 #include "vec3.h"
 
-class sphere : hittable {
+class sphere : public hittable {
 public:
 	sphere(point3 _center, double _radius) : center{ _center }, radius{ _radius } {};
 
@@ -15,7 +15,7 @@ public:
 		auto c = oc.length_squared() - radius * radius;
 
 		auto discriminant = half_b * half_b - a * c;
-		if (discriminant < 0) return -1.0;
+		if (discriminant < 0) return false;
 		auto sqrtd = sqrt(discriminant);
 		
 		// Find the nearest root that lies in the acceptable range
