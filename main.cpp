@@ -54,5 +54,8 @@ int main(int argc, char* argv[])
   cam.lookat   = point3(0,0,-1);
   cam.vup      = vec3(0,1,0);
   
+  cam.defocus_angle = 45.0;
+  cam.focus_dist    = 3.4;
+  
   cam.render(world);
 }
