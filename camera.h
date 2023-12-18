@@ -37,7 +37,7 @@ public:
     std::vector<std::thread> tasks(processor_count);
     
     for (auto i = processor_count; i > 0; i--) {
-      std::packaged_task<std::vector<color>()> task(std::bind(&camera::compute, this, std::ref(world)));
+      std::packaged_task<std::vector<color>()> task(std::bind(&camera::compute, this, std::cref(world)));
       buffers.push_back(task.get_future());
       std::thread task_td(std::move(task));
       tasks[0] = std::move(task_td);
