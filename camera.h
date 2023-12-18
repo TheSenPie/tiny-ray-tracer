@@ -8,6 +8,10 @@
 #include "material.h"
 
 #include <iostream>
+#include <vector>
+#include <future>
+#include <functional>
+#include <thread>
 
 class camera {
 public:
@@ -28,10 +32,46 @@ public:
   void render(const hittable& world) {
     initialize();
     
+    const auto processor_count = std::thread::hardware_concurrency();
+    std::vector<std::future<std::vector<color>>> buffers;
+    std::vector<std::thread> tasks(processor_count);
+    
+    for (auto i = processor_count; i > 0; i--) {
+      std::packaged_task<std::vector<color>()> task(std::bind(&camera::compute, this, std::ref(world)));
+      buffers.push_back(task.get_future());
+      std::thread task_td(std::move(task));
+      tasks[0] = std::move(task_td);
+    }
+ 
+    std::vector<color> buffer(image_width * image_height);
+ 
+    for (auto& task : tasks) {
+      task.join();
+    }
+    
+    for (auto& buffer_f : buffers) {
+      std::vector<color> other_buffer = buffer_f.get();
+      for (int p_sample = 0; p_sample < image_width * image_height; p_sample++) {
+        buffer[p_sample] += other_buffer[p_sample];
+      }
+    }
+    
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
     for (int j = 0; j < image_height; j++) {
-      std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+      for (int i = 0; i < image_width; i++) {
+        write_color(std::cout, buffer[i * image_height + j], samples_per_pixel, processor_count);
+      }
+    }
+    
+    std::clog << "\rDone.                 \n";
+  }
+  
+  std::vector<color> compute(const hittable& world) {
+    std::vector<color> buffer(image_width * image_height);
+    
+//    std::clog << "w:" << image_width << " h:" << image_height << std::endl;
+    for (int j = 0; j < image_height; j++) {
       for (int i = 0; i < image_width; i++) {
         color pixel_color{0, 0, 0};
         for (int sample = 0; sample < samples_per_pixel; sample++) {
@@ -39,11 +79,11 @@ public:
           pixel_color += ray_color(r, max_depth, world);
         }
  
-        write_color(std::cout, pixel_color, samples_per_pixel);
+        buffer[i * image_height + j] = pixel_color;
       }
     }
-    
-    std::clog << "\rDone.                 \n";
+ 
+    return buffer;
   }
   
 private:
