@@ -34,21 +34,19 @@ public:
     
     const auto processor_count = std::thread::hardware_concurrency();
     std::vector<std::future<std::vector<color>>> buffers;
-    std::vector<std::thread> tasks(processor_count);
+    std::vector<std::thread> tasks;
     
     for (auto i = processor_count; i > 0; i--) {
       std::packaged_task<std::vector<color>()> task(std::bind(&camera::compute, this, std::cref(world)));
       buffers.push_back(task.get_future());
-      std::thread task_td(std::move(task));
-      tasks[0] = std::move(task_td);
+      tasks.emplace_back(std::thread(std::move(task)));
     }
- 
-    std::vector<color> buffer(image_width * image_height);
  
     for (auto& task : tasks) {
       task.join();
     }
-    
+ 
+    std::vector<color> buffer(image_width * image_height);
     for (auto& buffer_f : buffers) {
       std::vector<color> other_buffer = buffer_f.get();
       for (int p_sample = 0; p_sample < image_width * image_height; p_sample++) {
