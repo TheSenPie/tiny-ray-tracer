@@ -21,9 +21,9 @@ public:
 		
 		// Find the nearest root that lies in the acceptable range
 		auto root =	( - half_b - sqrt(discriminant)) / a;
-		if (!ray_t.surrouns(root)) {
+		if (!ray_t.surrounds(root)) {
 			root = (-half_b + sqrt(discriminant)) / a;
-			if (!ray_t.surrouns(root)) {
+			if (!ray_t.surrounds(root)) {
 				return false;
 			}
 		}
@@ -32,7 +32,7 @@ public:
 		rec.p = r.at(rec.t);
 		vec3 outward_normal = (rec.p - center) / radius;
 		rec.set_face_normal(r, outward_normal);
-    rec.mat = mat;
+		rec.mat = mat;
 
 		return true;
 	}
