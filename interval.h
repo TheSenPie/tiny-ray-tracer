@@ -13,7 +13,7 @@ public:
 		return min <= x && x <= max;
 	}
 
-	bool surrouns(double x) {
+	bool surrounds(double x) {
 		return min < x && x < max;
 	}
   
