@@ -1,6 +1,9 @@
 @echo off
 
 echo Generating build files...
-cmake -S .  -B out
+mkdir out
+cd out
+cmake -S ..
+cd ..
 echo Finished successfully!
 pause
