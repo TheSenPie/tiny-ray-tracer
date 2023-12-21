@@ -1,3 +1,10 @@
+#!/bin/bash
+
+set -e
+
+echo "Downloading library dependencies for samples..."
+git submodule init
+git submodule update
 echo "Setting up folder for build files..."
 mkdir -p out
 cd out
