@@ -11,13 +11,13 @@ inline double linear_to_gamma(double linear_component) {
   return sqrt(linear_component);
 }
 
-void write_color(std::ostream& out, color pixel_color, int samples_per_pixel, int images_per_sample) {
+void write_color(std::ostream& out, color pixel_color, int samples_per_pixel) {
   auto r = pixel_color.x();
   auto g = pixel_color.y();
   auto b = pixel_color.z();
   
   // Divide the color by the number of samples.
-  auto scale = 1.0 / (samples_per_pixel * images_per_sample);
+  auto scale = 1.0 / samples_per_pixel;
   r *= scale;
   g *= scale;
   b *= scale;

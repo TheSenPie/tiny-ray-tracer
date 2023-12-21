@@ -11,7 +11,6 @@
 #include <vector>
 #include <future>
 #include <functional>
-#include <thread>
 
 class camera {
 public:
@@ -32,25 +31,18 @@ public:
   void render(const hittable& world) {
     initialize();
     
-    const auto processor_count = std::thread::hardware_concurrency();
     std::vector<std::future<std::vector<color>>> buffers;
-    std::vector<std::thread> tasks;
     
-    for (auto i = processor_count; i > 0; i--) {
-      std::packaged_task<std::vector<color>()> task(std::bind(&camera::compute, this, std::cref(world)));
-      buffers.push_back(task.get_future());
-      tasks.emplace_back(std::thread(std::move(task)));
+    for (auto i = samples_per_pixel; i > 0; i--) {
+      buffers.push_back(std::async(std::bind(&camera::compute, this, std::cref(world))));
     }
- 
-    for (auto& task : tasks) {
-      task.join();
-    }
+    
+    auto samples = wait_for_all(buffers);
  
     std::vector<color> buffer(image_width * image_height);
-    for (auto& buffer_f : buffers) {
-      std::vector<color> other_buffer = buffer_f.get();
+    for (auto& sample : samples) {
       for (int p_sample = 0; p_sample < image_width * image_height; p_sample++) {
-        buffer[p_sample] += other_buffer[p_sample];
+        buffer[p_sample] += sample[p_sample];
       }
     }
     
@@ -58,7 +50,7 @@ public:
 
     for (int j = 0; j < image_height; j++) {
       for (int i = 0; i < image_width; i++) {
-        write_color(std::cout, buffer[i * image_height + j], samples_per_pixel, processor_count);
+        write_color(std::cout, buffer[i * image_height + j], samples_per_pixel);
       }
     }
     
@@ -72,10 +64,10 @@ public:
     for (int j = 0; j < image_height; j++) {
       for (int i = 0; i < image_width; i++) {
         color pixel_color{0, 0, 0};
-        for (int sample = 0; sample < samples_per_pixel; sample++) {
+//        for (int sample = 0; sample < samples_per_pixel; sample++) {
           ray r = get_ray(i,j);
           pixel_color += ray_color(r, max_depth, world);
-        }
+//        }
  
         buffer[i * image_height + j] = pixel_color;
       }
