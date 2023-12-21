@@ -12,6 +12,9 @@
 #include <future>
 #include <functional>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 class camera {
 public:
   double aspect_ratio{ 1.0 };   // Ratio of image width over height
@@ -27,6 +30,8 @@ public:
   
   double defocus_angle{0};   // Variation angle of rays through each pixel
   double focus_dist{10};     // Distance from camera lookfrom to plane of perfect focus
+  
+  char* out_path;
   
   void render(const hittable& world) {
     initialize();
@@ -46,12 +51,27 @@ public:
       }
     }
     
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    if (!out_path) { // Write to standart output.
+      std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-    for (int j = 0; j < image_height; j++) {
-      for (int i = 0; i < image_width; i++) {
-        write_color(std::cout, buffer[i * image_height + j], samples_per_pixel);
+      for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+          write_color(std::cout, buffer[i * image_height + j], samples_per_pixel);
+        }
       }
+    } else { // Write to png.
+      unsigned char data[3 * image_width * image_height];
+      int idx = 0;
+      for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+          unsigned char r,g,b;
+          write_color(r, g, b, buffer[i * image_height + j], samples_per_pixel);
+          data[idx++] = r;
+          data[idx++] = g;
+          data[idx++] = b;
+        }
+      }
+      stbi_write_png(out_path, image_width, image_height, 3, data, 3 * image_width);
     }
     
     std::clog << "\rDone.                 \n";

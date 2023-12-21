@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 #include <future>
+#include <cstring>
 
 // Usings
 
@@ -52,6 +53,14 @@ vector<T> wait_for_all(vector<future<T>>& vf) {
   for(auto& fu : vf)
     res.push_back(fu.get());
   return res;
+}
+
+inline int ends_with(const char *str, const char *suffix) {
+  size_t str_len = strlen(str);
+  size_t suffix_len = strlen(suffix);
+
+  return (str_len >= suffix_len) &&
+         (!memcmp(str + str_len - suffix_len, suffix, suffix_len));
 }
 
 // Common Headeres

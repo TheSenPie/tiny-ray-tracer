@@ -72,5 +72,10 @@ int main(int argc, char* argv[])
   cam.defocus_angle = 0.6;
   cam.focus_dist    = 10.0;
   
+  if (argc == 2 && ends_with(argv[1], ".png")) {
+    cam.out_path = argv[1];
+  }
+  
   cam.render(world);
+  
 }
