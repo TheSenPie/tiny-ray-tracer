@@ -6,12 +6,16 @@
 #include <memory>
 #include <random>
 #include <thread>
+#include <vector>
+#include <future>
 
 // Usings
 
 using std::shared_ptr;
 using std::make_shared;
 using std::sqrt;
+using std::vector;
+using std::future;
 
 
 // Constants
@@ -26,16 +30,27 @@ inline double degrees_to_radians(double degrees) {
 	return degrees * pi / 180.0;
 }
 
+static std::hash<std::thread::id> hasher;
+static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+
 inline double random_double() {
-  static std::thread::id this_id = std::this_thread::get_id();
-  static thread_local std::mt19937 generator;
-  static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+  static thread_local std::mt19937 generator(
+    static_cast<unsigned>(hasher(std::this_thread::get_id()))
+  );
   return distribution(generator);
 }
 
 inline double random_double(double min, double max) {
   // Returns a random real in [min,max).
   return min + (max-min)*random_double();
+}
+
+template<typename T>
+vector<T> wait_for_all(vector<future<T>>& vf) {
+  vector<T> res;
+  for(auto& fu : vf)
+    res.push_back(fu.get());
+  return res;
 }
 
 // Common Headeres
