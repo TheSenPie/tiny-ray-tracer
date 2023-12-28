@@ -14,5 +14,5 @@ else
   TRT_GENERATOR=
 fi
 
-cmake .. ${TRT_GENERATOR} $@
+cmake -DASSIMP_INSTALL=OFF .. ${TRT_GENERATOR} $@
 echo Finished successfully!

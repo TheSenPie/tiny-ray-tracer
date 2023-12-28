@@ -5,13 +5,18 @@
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
-#include "triangle.h"
+#include "mesh.h"
+#include "model.h"
+
+#include <array>
 
 int main(int argc, char* argv[])
 {
   hittable_list world;
   
-  auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
+  
+  auto ground_material = make_shared<lambertian>(checker);
   world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
  
   //for (int a = -11; a < 11; a++) {
@@ -52,7 +57,19 @@ int main(int argc, char* argv[])
   //auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
   //world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
-  world.add(make_shared<triangle>(point3(1, 0, -1), point3(0, 1, -1), point3(-1, 0, -1), material2));
+  std::vector<double> verticies{
+    1.0, 0.0, -1.0,   0.0, 0.0, 1.0,  1.0, 1.0,
+    0.0, 1.0, -1.0,   0.0, 0.0, 1.0,  0.5, 0.0,
+    -1.0, 0.0, -1.0,  0.0, 0.0, 1.0,  0.0, 1.0
+  };
+  
+  std::vector<int> indicies{0, 1, 2};
+  
+  world.add(make_shared<mesh>(verticies, indicies, ground_material));
+  
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/backpack/backpack.obj";
+  world.add(make_shared<model>(modelPath.c_str()));
  
 	// Camera
   camera cam;
@@ -61,7 +78,7 @@ int main(int argc, char* argv[])
 //  cam.image_width       = 1200; // prod
 //  cam.samples_per_pixel = 500; // prod
   cam.image_width = 400;
-  cam.samples_per_pixel = 12;
+  cam.samples_per_pixel = 8;
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
