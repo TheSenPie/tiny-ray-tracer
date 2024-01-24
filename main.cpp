@@ -69,7 +69,8 @@ int main(int argc, char* argv[])
   
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/backpack/backpack.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cow/cow.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cow/cow.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/box/wooden-box.obj";
   world.add(make_shared<model>(modelPath.c_str()));
  
 	// Camera
@@ -78,12 +79,12 @@ int main(int argc, char* argv[])
   cam.aspect_ratio      = 16.0 / 9.0;
 //  cam.image_width       = 1200; // prod
 //  cam.samples_per_pixel = 500; // prod
-  cam.image_width = 400;
-  cam.samples_per_pixel = 8;
+  cam.image_width = 1280;
+  cam.samples_per_pixel = 500;
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
-  cam.lookfrom = point3(13,2,3);
+  cam.lookfrom = point3(5,2,3);
   cam.lookat   = point3(0,0,0);
   cam.vup      = vec3(0,1,0);
 

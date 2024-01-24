@@ -63,7 +63,7 @@ private:
   mesh processMesh(aiMesh *_mesh, const aiScene *scene) {
     vector<double> vertices;
     vector<int> indices;
-    vector<texture> textures;
+    vector<shared_ptr<image_texture>> textures;
      
     for (unsigned int i = 0; i < _mesh->mNumVertices; i++) {
       // process vertex positions, normals and texture coordinates
@@ -107,19 +107,12 @@ private:
           indices.push_back(face.mIndices[j]);
     }
 
-//    // process materials
-//    aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
-//    // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
-//    // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER.
-//    // Same applies to other texture as the following list summarizes:
-//    // diffuse: texture_diffuseN
-//    // specular: texture_specularN
-//    // normal: texture_normalN
-//    
-//    
-//    // 1. diffuse maps
-//    vector<texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-//    textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+    // process materials
+    aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
+ 
+    // 1. diffuse maps
+    auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 //    // 2. specular maps
 //    vector<texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 //    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
@@ -130,21 +123,23 @@ private:
 //    std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
     
     // give proper texture
-    auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
-    auto ground_material = make_shared<lambertian>(checker);
+    auto ground_material = make_shared<lambertian>(textures.front());
     
     return mesh{vertices, indices, ground_material};
   }
  
-  vector<texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName) {
-//    vector<texture> textures;
-//    for (int i = 0; i < mat->GetTextureCount(type); i++) {
-//      aiString str;
-//      mat->GetTexture(type, i, &str);
-//      image_texture tex;
-//      textures.push_back(tex);
-//    }
-//    return textures;
+  vector<shared_ptr<image_texture>> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName) {
+    vector<shared_ptr<image_texture>> textures;
+    for (int i = 0; i < mat->GetTextureCount(type); i++) {
+      aiString str;
+      mat->GetTexture(type, i, &str);
+      std::string filename = string(str.C_Str());
+      filename = directory + '/' + filename;
+      std::clog << "Texture path is: " << filename << std::endl;
+      auto tex = make_shared<image_texture>(filename.c_str());
+      textures.push_back(tex);
+    }
+    return textures;
   }
 };
 

@@ -54,6 +54,14 @@ private:
 class image_texture : public texture {
   public:
     image_texture(const char* filename) : image(filename) {}
+ 
+    image_texture(const image_texture&) = delete;
+    image_texture& operator=(const image_texture&) = delete;
+ 
+    image_texture(image_texture&& other) noexcept : image(std::move(other.image)) {}
+    image_texture& operator=(image_texture&& other) noexcept {
+      std::swap(image, other.image);
+    }
     
     color value(double u, double v, const point3& p) const override {
       // If we have no texture data, then return solid cyan as a debugging aid.

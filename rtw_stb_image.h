@@ -17,6 +17,28 @@ class rtw_image {
 public:
   rtw_image() : data(nullptr) {}
   
+  rtw_image(const rtw_image&) = delete;
+  rtw_image& operator=(const rtw_image&) = delete;
+ 
+  rtw_image(rtw_image&& other) noexcept :
+    data{other.data},
+    image_width{other.image_width},
+    image_height{other.image_height},
+    bytes_per_scanline{other.bytes_per_scanline}
+    {
+    other.data = nullptr;
+    other.image_width = other.image_height = 0;
+    other.bytes_per_scanline = 0;
+  }
+
+  rtw_image& operator=(rtw_image&& other) noexcept {
+    std::swap(data, other.data);
+    std::swap(image_width, other.image_width);
+    std::swap(image_height, other.image_height);
+    std::swap(bytes_per_scanline, other.bytes_per_scanline);
+    return *this;
+  }
+  
   rtw_image(const char* image_filename) {
     // Loads image data from the specified file. If the RTW_IMAGES environment variable is
     // defined, looks only in that directory for the image file. If the image was not found,

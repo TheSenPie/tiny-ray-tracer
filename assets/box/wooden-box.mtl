@@ -1,0 +1,14 @@
+# Blender 3.4.1 MTL File: 'uploads_files_2025008_Wooden_Box.blend'
+# www.blender.org
+
+newmtl Wooden_box_01_mtl.001
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 0.200000
+illum 1
+map_Kd Wooden_box_01_BaseColor.png
+map_Ns Wooden_box_01_Roughness.png
+map_refl Wooden_box_01_Metallic.png
+map_Bump -bm 1.000000 Wooden_box_01_Normal.png
