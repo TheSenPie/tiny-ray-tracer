@@ -65,11 +65,20 @@ private:
     vector<int> indices;
     vector<shared_ptr<image_texture>> textures;
      
+    
+    std::clog << "Model has: " << _mesh->mNumVertices << " vertices;" << std::endl;
+    std::clog << "Model has normals: " << _mesh->HasNormals() << std::endl;
+ 
     for (unsigned int i = 0; i < _mesh->mNumVertices; i++) {
       // process vertex positions, normals and texture coordinates
       vertices.push_back(_mesh->mVertices[i].x);
       vertices.push_back(_mesh->mVertices[i].y);
       vertices.push_back(_mesh->mVertices[i].z);
+      
+      std::clog << "v" << i << " x: " << _mesh->mVertices[i].x << " y: " << _mesh->mVertices[i].y << " z: "<< _mesh->mVertices[i].z << std::endl;
+      if ((i + 1) % 3 == 0) {
+        std::clog << "\n\n" << std::endl;
+      }
       
       // normals
       if (_mesh->HasNormals()) { // todo: attempt to generate normals, if missing
@@ -99,13 +108,20 @@ private:
         vertices.push_back(0);
       }
     }
+    
+    std::cout << "Total vertices: " << vertices.size() << std::endl;
  
+    std::cout << "Reading indicies, beep-boop!" << std::endl;
     // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
     for (unsigned int i = 0; i < _mesh->mNumFaces; i++) {
       aiFace face = _mesh->mFaces[i];
-      for (unsigned int j = 0; j < face.mNumIndices; j++)
+      for (unsigned int j = 0; j < face.mNumIndices; j++) {
           indices.push_back(face.mIndices[j]);
+//          std::cout << face.mIndices[j] << std::endl;
+        }
     }
+    
+    std::cout << "Total indicies: " << indices.size() << std::endl;
 
     // process materials
     aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
