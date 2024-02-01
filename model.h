@@ -37,7 +37,13 @@ private:
   // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
   void loadModel(string const &path) {
     Assimp::Importer import;
-    const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs);
+//    import.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_LINE | aiPrimitiveType_POINT);
+    const aiScene* scene = import.ReadFile(path,
+                                               aiProcess_CalcTangentSpace       |
+                                               aiProcess_Triangulate            |
+                                               aiProcess_JoinIdenticalVertices  |
+                                               aiProcess_SortByPType); // | aiProcess_GenNormals | aiProcess_FlipUVs
+ 
     // check for errors
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
       std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
@@ -60,54 +66,74 @@ private:
     }
   }
  
-  mesh processMesh(aiMesh *_mesh, const aiScene *scene) {
+  mesh processMesh(aiMesh* _mesh, const aiScene* scene) {
     vector<double> vertices;
-    vector<int> indices;
+
+    vector<int> indices; // each triangle has 9 indicies, because 3 vertices, each with 3
     vector<shared_ptr<image_texture>> textures;
-     
-    
+ 
     std::clog << "Model has: " << _mesh->mNumVertices << " vertices;" << std::endl;
     std::clog << "Model has normals: " << _mesh->HasNormals() << std::endl;
- 
-    for (unsigned int i = 0; i < _mesh->mNumVertices; i++) {
-      // process vertex positions, normals and texture coordinates
-      vertices.push_back(_mesh->mVertices[i].x);
-      vertices.push_back(_mesh->mVertices[i].y);
-      vertices.push_back(_mesh->mVertices[i].z);
+    
+    for (unsigned int i = 0; i < _mesh->mNumFaces; i++) {
+      const aiFace& face = _mesh->mFaces[i];
       
-      std::clog << "v" << i << " x: " << _mesh->mVertices[i].x << " y: " << _mesh->mVertices[i].y << " z: "<< _mesh->mVertices[i].z << std::endl;
-      if ((i + 1) % 3 == 0) {
-        std::clog << "\n\n" << std::endl;
-      }
-      
-      // normals
-      if (_mesh->HasNormals()) { // todo: attempt to generate normals, if missing
-        vertices.push_back(_mesh->mNormals[i].x);
-        vertices.push_back(_mesh->mNormals[i].y);
-        vertices.push_back(_mesh->mNormals[i].z);
-      }
-      
-      // texture coordinates
-      if(_mesh->mTextureCoords[0]) { // does the mesh contain texture coordinates?
-        // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
-        // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
-        vertices.push_back(_mesh->mTextureCoords[0][i].x);
-        vertices.push_back(_mesh->mTextureCoords[0][i].y);
-//        // tangent
-//        vector.x = _mesh->mTangents[i].x;
-//        vector.y = _mesh->mTangents[i].y;
-//        vector.z = _mesh->mTangents[i].z;
-//        vertex.Tangent = vector;
-//        // bitangent
-//        vector.x = _mesh->mBitangents[i].x;
-//        vector.y = _mesh->mBitangents[i].y;
-//        vector.z = _mesh->mBitangents[i].z;
-//        vertex.Bitangent = vector;
-      } else {
-        vertices.push_back(0);
-        vertices.push_back(0);
+      for (unsigned int j = 0; j < 3; j++) {
+        const int idx = face.mIndices[j];
+        
+        vertices.push_back(_mesh->mVertices[idx].x);
+        vertices.push_back(_mesh->mVertices[idx].y);
+        vertices.push_back(_mesh->mVertices[idx].z);
+        
+        vertices.push_back(_mesh->mNormals[idx].x);
+        vertices.push_back(_mesh->mNormals[idx].y);
+        vertices.push_back(_mesh->mNormals[idx].z);
+        
+        vertices.push_back(_mesh->mTextureCoords[0][idx].x);
+        vertices.push_back(_mesh->mTextureCoords[0][idx].y);
       }
     }
+ 
+  for (auto p = vertices.begin(); p != vertices.end(); p++) {
+    std::clog << *p << " " << std::endl;
+  }
+    
+//    exit(0);
+    
+//    for (unsigned int i = 0; i < _mesh->mNumVertices; i++) {
+//      // process vertex positions, normals and texture coordinates
+//      vertices.push_back(_mesh->mVertices[i].x);
+//      vertices.push_back(_mesh->mVertices[i].y);
+//      vertices.push_back(_mesh->mVertices[i].z);
+//      
+//      // normals
+//      if (_mesh->HasNormals()) { // todo: attempt to generate normals, if missing
+//        vertices.push_back(_mesh->mNormals[i].x);
+//        vertices.push_back(_mesh->mNormals[i].y);
+//        vertices.push_back(_mesh->mNormals[i].z);
+//      }
+//      
+//      // texture coordinates
+//      if(_mesh->mTextureCoords[0]) { // does the mesh contain texture coordinates?
+//        // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
+//        // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
+//        vertices.push_back(_mesh->mTextureCoords[0][i].x);
+//        vertices.push_back(_mesh->mTextureCoords[0][i].y);
+////        // tangent
+////        vector.x = _mesh->mTangents[i].x;
+////        vector.y = _mesh->mTangents[i].y;
+////        vector.z = _mesh->mTangents[i].z;
+////        vertex.Tangent = vector;
+////        // bitangent
+////        vector.x = _mesh->mBitangents[i].x;
+////        vector.y = _mesh->mBitangents[i].y;
+////        vector.z = _mesh->mBitangents[i].z;
+////        vertex.Bitangent = vector;
+//      } else {
+//        vertices.push_back(0);
+//        vertices.push_back(0);
+//      }
+//    }
     
     std::cout << "Total vertices: " << vertices.size() << std::endl;
  
@@ -129,6 +155,7 @@ private:
     // 1. diffuse maps
     auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+    std::cout << textures.size() << std::endl;
 //    // 2. specular maps
 //    vector<texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 //    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());

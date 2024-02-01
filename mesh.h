@@ -12,12 +12,12 @@ public:
 		: verticies {_verticies}, indices {_indices}, mat {_material} {};
   
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
-    for (int idx = 0; idx < indices.size(); idx += 3) {
-      
-      int e0 = indices[idx] * stride;
-      int e1 = indices[idx + 1] * stride;
-      int e2 = indices[idx + 2] * stride;
-     
+    for (int idx = 0; idx < verticies.size(); idx += 3 * 8) {
+ 
+      int e0 = idx;
+      int e1 = idx + 8;
+      int e2 = idx + 16;
+ 
       point3 v0{
         verticies[e0], verticies[e0 + 1], verticies[e0 + 2],
       };
@@ -27,15 +27,14 @@ public:
       point3 v2{
         verticies[e2], verticies[e2 + 1], verticies[e2 + 2]
       };
-      
+ 
       double t, u, v;
       bool hit = intersect_triangle(r, v0, v1, v2, t, u, v);
       // Find the nearest root that lies in the acceptable range
       if (!hit || !ray_t.surrounds(t)) {
         continue; // test next triangle
       }
-      
-      
+ 
       point3 n0{
         verticies[e0 + 3], verticies[e0 + 4], verticies[e0 + 5]
       };

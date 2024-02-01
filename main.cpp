@@ -18,10 +18,7 @@ int main(int argc, char* argv[])
   
   auto ground_material = make_shared<lambertian>(checker);
   
-  auto smiley = make_shared<image_texture>("/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.png");
-  auto triangle_material = make_shared<lambertian>(smiley);
-  
-//  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, triangle_material));
+//  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
  
   //for (int a = -11; a < 11; a++) {
   //  for (int b = -11; b < 11; b++) {
@@ -73,9 +70,10 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/backpack/backpack.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cow/cow.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/box/wooden-box.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/box/wooden-box.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
   world.add(make_shared<model>(modelPath.c_str()));
   
   camera cam;
@@ -90,11 +88,11 @@ int main(int argc, char* argv[])
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
-  cam.lookfrom = point3(5,1,8);
-  cam.lookat   = point3(0, 1,0);
+  cam.lookfrom = point3(2, 3, 5);
+  cam.lookat   = point3(0, 0,0);
   cam.vup      = vec3(0,1,0);
   cam.defocus_angle = 0.6;
-  cam.focus_dist    = 10.0;
+  cam.focus_dist    = 5.0;
   
   if (argc == 2 && ends_with(argv[1], ".png")) {
     cam.out_path = argv[1];
