@@ -25,12 +25,18 @@ public:
   model(const char* path) { loadModel(path); }
   
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+    hit_record temp_rec;
+    bool hit_anything = false;
+    auto closest_so_far = ray_t.max;
+    
     for (auto mesh: meshes) {
-      if(mesh.hit(r, ray_t, rec)) {
-        return true;
+      if (mesh.hit(r, interval(ray_t.min, closest_so_far), temp_rec)) {
+          hit_anything = true;
+          closest_so_far = temp_rec.t;
+          rec = temp_rec;
       }
     }
-    return false;
+    return hit_anything;
   }
  
 private:
@@ -94,47 +100,6 @@ private:
       }
     }
  
-  for (auto p = vertices.begin(); p != vertices.end(); p++) {
-    std::clog << *p << " " << std::endl;
-  }
-    
-//    exit(0);
-    
-//    for (unsigned int i = 0; i < _mesh->mNumVertices; i++) {
-//      // process vertex positions, normals and texture coordinates
-//      vertices.push_back(_mesh->mVertices[i].x);
-//      vertices.push_back(_mesh->mVertices[i].y);
-//      vertices.push_back(_mesh->mVertices[i].z);
-//      
-//      // normals
-//      if (_mesh->HasNormals()) { // todo: attempt to generate normals, if missing
-//        vertices.push_back(_mesh->mNormals[i].x);
-//        vertices.push_back(_mesh->mNormals[i].y);
-//        vertices.push_back(_mesh->mNormals[i].z);
-//      }
-//      
-//      // texture coordinates
-//      if(_mesh->mTextureCoords[0]) { // does the mesh contain texture coordinates?
-//        // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
-//        // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
-//        vertices.push_back(_mesh->mTextureCoords[0][i].x);
-//        vertices.push_back(_mesh->mTextureCoords[0][i].y);
-////        // tangent
-////        vector.x = _mesh->mTangents[i].x;
-////        vector.y = _mesh->mTangents[i].y;
-////        vector.z = _mesh->mTangents[i].z;
-////        vertex.Tangent = vector;
-////        // bitangent
-////        vector.x = _mesh->mBitangents[i].x;
-////        vector.y = _mesh->mBitangents[i].y;
-////        vector.z = _mesh->mBitangents[i].z;
-////        vertex.Bitangent = vector;
-//      } else {
-//        vertices.push_back(0);
-//        vertices.push_back(0);
-//      }
-//    }
-    
     std::cout << "Total vertices: " << vertices.size() << std::endl;
  
     std::cout << "Reading indicies, beep-boop!" << std::endl;
@@ -143,7 +108,6 @@ private:
       aiFace face = _mesh->mFaces[i];
       for (unsigned int j = 0; j < face.mNumIndices; j++) {
           indices.push_back(face.mIndices[j]);
-//          std::cout << face.mIndices[j] << std::endl;
         }
     }
     
