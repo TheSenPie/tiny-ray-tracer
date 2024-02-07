@@ -5,11 +5,17 @@
 
 #include "hittable.h"
 #include "vec3.h"
-
 class mesh : public hittable {
 public:
 	mesh(std::vector<double> _verticies, std::vector<int> _indices, shared_ptr<material> _material)
-		: verticies {_verticies}, indices {_indices}, mat {_material} {};
+		: verticies {_verticies}, indices {_indices}, mat {_material} {
+      auto ix = interval(-0.0000000001, 0.00000000001);
+      auto iy = interval(-0.0000000001, 0.00000000001);
+      auto iz = interval(-0.0000000001, 0.00000000001);
+      bbox = aabb(
+          ix, iy, iz
+      );
+    };
   
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
     hit_record temp_rec;
@@ -25,8 +31,12 @@ public:
     }
     return hit_anything;
   };
+ 
+  aabb bounding_box() const override { return bbox; }
 
 private:
+  aabb bbox;
+  
   bool hit_one(const ray& r, interval ray_t, hit_record& rec, int idx) const {
     int e0 = idx;
     int e1 = idx + 8;
@@ -42,7 +52,7 @@ private:
       verticies[e2], verticies[e2 + 1], verticies[e2 + 2]
     };
 
-    double t, u, v;
+    double t, u, v; // t - represents the distance from ray origin to hit point
     bool hit = intersect_triangle(r, v0, v1, v2, t, u, v);
     // Find if the nearest root lies in the acceptable range
     if (!hit || !ray_t.surrounds(t)) {

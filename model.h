@@ -13,7 +13,7 @@
 using std::vector;
 using std::string;
 
-class model : public hittable{
+class model : public hittable {
 public:
   // model data
   vector<shared_ptr<image_texture>> textures_loaded; // stores all the textures loaded so far,
@@ -22,7 +22,15 @@ public:
   string directory;
  
   // constructor, expects a filepath to a 3D model.
-  model(const char* path) { loadModel(path); }
+  model(const char* path) {
+    loadModel(path);
+    auto ix = interval(-1, 1);
+    auto iy = interval(-1, 1);
+    auto iz = interval(-1, 1);
+    bbox = aabb(
+        ix, iy, iz
+    );
+  }
   
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
     hit_record temp_rec;
@@ -38,8 +46,11 @@ public:
     }
     return hit_anything;
   }
- 
+
+  aabb bounding_box() const override { return bbox; }
 private:
+  aabb bbox;
+  
   // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
   void loadModel(string const &path) {
     Assimp::Importer import;
@@ -119,7 +130,6 @@ private:
     // 1. diffuse maps
     auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-    std::cout << textures.size() << std::endl;
 //    // 2. specular maps
 //    vector<texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 //    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
@@ -148,6 +158,7 @@ private:
     }
     return textures;
   }
+  
 };
 
 #endif

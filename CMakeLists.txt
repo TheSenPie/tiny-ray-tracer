@@ -4,7 +4,7 @@ project(tiny-ray-tracer)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(${PROJECT_NAME} main.cpp vec3.h color.h texture.h ray.h material.h hittable.h sphere.h mesh.h model.h hittable_list.h model.h rtweekend.h interval.h camera.h rtw_stb_image.h)
+add_executable(${PROJECT_NAME} main.cpp vec3.h color.h texture.h ray.h material.h hittable.h sphere.h mesh.h model.h hittable_list.h model.h rtweekend.h interval.h aabb.h bvh.h camera.h rtw_stb_image.h)
 
 include_directories("include")
 
