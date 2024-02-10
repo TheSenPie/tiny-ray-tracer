@@ -5,7 +5,6 @@
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
-#include "mesh.h"
 #include "model.h"
 #include "bvh.h"
 
@@ -15,9 +14,9 @@ int main(int argc, char* argv[])
 {
   hittable_list world;
   
-  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
+//  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
   
-  auto ground_material = make_shared<lambertian>(checker);
+//  auto ground_material = make_shared<lambertian>(checker);
   
 //  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
  
@@ -57,7 +56,7 @@ int main(int argc, char* argv[])
 //  world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
 
   //auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-  //world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+//  world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
 //  std::vector<double> verticies{
 //    1.0, 0.0, -1.0,   0.0, 0.0, 1.0,  1.0, 1.0,
@@ -74,10 +73,12 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/box/wooden-box.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
   world.add(make_shared<model>(modelPath.c_str()));
-  
-  world = hittable_list(make_shared<bvh_node>(world));
+ 
+//  world = hittable_list(make_shared<bvh_node>(world));
   
   camera cam;
  

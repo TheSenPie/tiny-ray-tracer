@@ -53,7 +53,11 @@ private:
 
 class image_texture : public texture {
   public:
-    image_texture(const char* filename) : image(filename) {}
+    const char* path;
+    
+    image_texture(const char* filename) : image(filename) {
+      path = filename;
+    }
  
     image_texture(const image_texture&) = delete;
     image_texture& operator=(const image_texture&) = delete;

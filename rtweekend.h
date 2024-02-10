@@ -18,7 +18,6 @@ using std::sqrt;
 using std::vector;
 using std::future;
 
-
 // Constants
 
 constexpr double infinity = std::numeric_limits<double>::infinity();
@@ -73,5 +72,6 @@ inline int ends_with(const char *str, const char *suffix) {
 #include "interval.h"
 #include "ray.h"
 #include "vec3.h"
+#include "vec2.h"
 
 #endif

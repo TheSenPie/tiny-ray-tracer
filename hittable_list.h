@@ -19,7 +19,7 @@ public:
 
     void clear() { objects.clear(); }
 
-    void add(shared_ptr<hittable> object) {
+    void add(const shared_ptr<hittable> object) {
         objects.push_back(object);
         bbox = aabb(bbox, object->bounding_box());
     }
@@ -41,8 +41,11 @@ public:
     }
     
     aabb bounding_box() const override { return bbox; }
+    
+    point3 centroid() const override { return c; }
 private:
   aabb bbox;
+  point3 c;
 };
 
 #endif

@@ -1,81 +1,71 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#define TEST_CULL 1
+#define TEST_CULL
 
+#include "rtweekend.h"
 #include "hittable.h"
-#include "vec3.h"
-class mesh : public hittable {
+
+class triangle : public hittable {
 public:
-	mesh(std::vector<double> _verticies, std::vector<int> _indices, shared_ptr<material> _material)
-		: verticies {_verticies}, indices {_indices}, mat {_material} {
-      auto ix = interval(-0.0000000001, 0.00000000001);
-      auto iy = interval(-0.0000000001, 0.00000000001);
-      auto iz = interval(-0.0000000001, 0.00000000001);
-      bbox = aabb(
-          ix, iy, iz
-      );
-    };
+  shared_ptr<material> mat;
   
-  bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
-    hit_record temp_rec;
-    bool hit_anything = false;
-    auto closest_so_far = ray_t.max;
-    
-    for (int idx = 0; idx < verticies.size(); idx += 3 * 8) {
-      if (hit_one(r, interval(ray_t.min, closest_so_far), temp_rec, idx)) {
-          hit_anything = true;
-          closest_so_far = temp_rec.t;
-          rec = temp_rec;
-      }
-    }
-    return hit_anything;
-  };
- 
+  triangle(
+    point3 _v1, point3 _v2, point3 _v3,
+    point3 _n1, point3 _n2, point3 _n3,
+    point2 _uv1, point2 _uv2, point2 _uv3)
+    :
+    v1{_v1}, v2{_v2}, v3{_v3}, n1{_n1}, n2{_n2}, n3{_n3}, uv1{_uv1}, uv2{_uv2}, uv3{_uv2}
+  {
+    // calculate aabb
+    bbox.x.min = fmin(bbox.x.min, v1.x());
+    bbox.x.min = fmin(bbox.x.min, v2.x());
+    bbox.x.min = fmin(bbox.x.min, v3.x());
+    bbox.x.max = fmax(bbox.x.max, v1.x());
+    bbox.x.max = fmax(bbox.x.max, v2.x());
+    bbox.x.max = fmax(bbox.x.max, v3.x());
+
+    bbox.y.min = fmin(bbox.y.min, v1.y());
+    bbox.y.min = fmin(bbox.y.min, v2.y());
+    bbox.y.min = fmin(bbox.y.min, v3.y());
+    bbox.y.max = fmax(bbox.y.max, v1.y());
+    bbox.y.max = fmax(bbox.y.max, v2.y());
+    bbox.y.max = fmax(bbox.y.max, v3.y());
+
+    bbox.z.min = fmin(bbox.z.min, v1.z());
+    bbox.z.min = fmin(bbox.z.min, v2.z());
+    bbox.z.min = fmin(bbox.z.min, v3.z());
+    bbox.z.max = fmax(bbox.z.max, v1.z());
+    bbox.z.max = fmax(bbox.z.max, v2.z());
+    bbox.z.max = fmax(bbox.z.max, v3.z());
+
+    // callculate centroid
+    center = point3{
+      (bbox.x.min + bbox.x.max) / 2.0,
+      (bbox.y.min + bbox.y.max) / 2.0,
+      (bbox.z.min + bbox.z.max) / 2.0
+    };
+  }
+      
   aabb bounding_box() const override { return bbox; }
-
-private:
-  aabb bbox;
   
-  bool hit_one(const ray& r, interval ray_t, hit_record& rec, int idx) const {
-    int e0 = idx;
-    int e1 = idx + 8;
-    int e2 = idx + 16;
+  point3 centroid() const override { return center; }
 
-    point3 v0{
-      verticies[e0], verticies[e0 + 1], verticies[e0 + 2],
-    };
-    point3 v1{
-      verticies[e1], verticies[e1 + 1], verticies[e1 + 2]
-    };
-    point3 v2{
-      verticies[e2], verticies[e2 + 1], verticies[e2 + 2]
-    };
-
+  bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
     double t, u, v; // t - represents the distance from ray origin to hit point
-    bool hit = intersect_triangle(r, v0, v1, v2, t, u, v);
+    bool hit = intersect_triangle(r, v1, v2, v3, t, u, v);
     // Find if the nearest root lies in the acceptable range
     if (!hit || !ray_t.surrounds(t)) {
        return false;
     }
 
-    point3 n0{
-      verticies[e0 + 3], verticies[e0 + 4], verticies[e0 + 5]
-    };
-    point3 n1{
-      verticies[e1 + 3], verticies[e1 + 4], verticies[e1 + 5]
-    };
-    point3 n2{
-      verticies[e2 + 3], verticies[e2 + 4], verticies[e2 + 5]
-    };
-    
-    auto normal = (1 - u - v) * n0 + u * n1 + v * n2;
-    auto tex_u = verticies[e0 + 6] * (1 - u - v)
-      + verticies[e1 + 6] * u
-      + verticies[e2 + 6] * v;
-    auto tex_v = verticies[e0 + 7] * (1 - u - v)
-      + verticies[e1 + 7] * u
-      + verticies[e2 + 7] * v;
+    auto normal = (1 - u - v) * n1 + u * n2 + v * n3;
+    auto tex_u = uv1.x() * (1 - u - v)
+      + uv2.x() * u
+      + uv3.x() * v;
+    auto tex_v = uv1.y() * (1 - u - v)
+      + uv2.y() * u
+      + uv3.y() * v;
     
     rec.t = t;
     rec.p = r.at(rec.t);
@@ -84,7 +74,17 @@ private:
     rec.v = tex_v;
     rec.mat = mat;
     return true;
+    return false;
   }
+ 
+    friend std::ostream& operator<<(std::ostream & out, const triangle & t);
+private:
+  point3 v1, v2, v3;
+  point3 n1, n2, n3;
+  vec2 uv1, uv2, uv3;
+ 
+  point3 center;
+  aabb bbox;
   
   static bool intersect_triangle(
     const ray& r,
@@ -154,12 +154,10 @@ private:
 #endif
     return true;
   }
- 
-  std::vector<double> verticies;
-  std::vector<int> indices;
-	shared_ptr<material> mat;
-  
-  static constexpr int stride = 3 + 3 + 2; // xyz n1n2n3 uv
 };
+
+inline std::ostream& operator<<(std::ostream & out, const triangle & t) {
+	return out << t.v1 << '\n' << t.v2 << '\n' << t.v3 << '\n' << std::endl;
+}
 
 #endif
