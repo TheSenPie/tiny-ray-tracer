@@ -17,11 +17,12 @@ using std::string;
 
 class model : public hittable_list {
 public:
-//  vector<triangle> triangles;
-  
   // constructor, expects a filepath to a 3D model.
   model(const char* path) {
-      loadModel(path);
+    auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
+    checker_mat = make_shared<lambertian>(checker);
+ 
+    loadModel(path);
   }
 
 private:
@@ -29,6 +30,8 @@ private:
   vector<shared_ptr<image_texture>> textures_loaded;   // stores all the textures loaded so far,
                                                        // optimization to make sure textures aren't loaded more than once.
   string directory;
+  
+  shared_ptr<material> checker_mat;
   
   // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
   void loadModel(string const &path) {
@@ -97,49 +100,40 @@ private:
       }
       triangles.push_back(make_shared<triangle>(vs[0], vs[1], vs[2], ns[0], ns[1], ns[2], uvs[0], uvs[1], uvs[2]));
     }
- 
-    auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
-    auto ground_material = make_shared<lambertian>(checker);
-    
- 
-//    // process materials
-//    aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
-// 
-//    // 1. diffuse maps
-//    auto diffuseMaps = loadMaterials(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    // process materials
+    aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
+    // 1. diffuse material
+    auto diffuse_mat = loadMaterial(material, aiTextureType_DIFFUSE, "texture_diffuse");
 
     for (auto p_triangle = triangles.begin(); p_triangle != triangles.end(); p_triangle++) {
-      (*p_triangle)->mat = ground_material;
+      (*p_triangle)->mat = diffuse_mat;
       add(*p_triangle);
     }
-
   }
  
-//  vector<shared_ptr<material>> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName) {
-//    vector<shared_ptr<material>> materials;
-//    for (int i = 0; i < mat->GetTextureCount(type); i++) {
-//      aiString str;
-//      mat->GetTexture(type, i, &str);
-//      for (unsigned int j = 0; j < textures_loaded.size(); j++) {
-//        if (std::strcmp(textures_loaded[j].path, str.C_Str()) == 0) {
-//          textures.push_back(textures_loaded[j]);
-//          skip = true;
-//          // store index of the material that correspnds to that id
-//          // so we can just borrow it and assign to whatever whenever
-//          break;
-//        }
-//      }
-//      std::string filename = string(str.C_Str());
-//      filename = directory + '/' + filename;
-//      std::clog << "Texture path is: " << filename << std::endl;
-//      auto tex = make_shared<image_texture>(filename.c_str());
-//      textures.push_back(tex);
-//      // give proper texture
-//      
-//    }
-//    return textures;
-//  }
-  
+  shared_ptr<material> loadMaterial(aiMaterial *mat, aiTextureType type, string typeName) {
+    // todo: handle the case of multiple textures for a single material
+    if (mat->GetTextureCount(type) == 0) {
+      return checker_mat;
+    }
+    for (int i = 0; i < mat->GetTextureCount(type); i++) {
+      aiString str;
+      mat->GetTexture(type, i, &str);
+      std::string filename = string(str.C_Str());
+      filename = directory + '/' + filename;
+      for (unsigned int j = 0; j < textures_loaded.size(); j++) {
+        if (textures_loaded[j]->path == filename) {
+          return materials_loaded[j];
+        }
+      }
+      std::clog << "Loading texture at: " << filename << std::endl;
+      auto tex = make_shared<image_texture>(filename.c_str());
+      textures_loaded.push_back(tex);
+      auto mat = make_shared<lambertian>(tex);
+      materials_loaded.push_back(mat);
+      return mat;
+    }
+  }
 };
 
 #endif

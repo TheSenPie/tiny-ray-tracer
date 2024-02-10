@@ -53,8 +53,8 @@ private:
 
 class image_texture : public texture {
   public:
-    const char* path;
-    
+    std::string path;
+
     image_texture(const char* filename) : image(filename) {
       path = filename;
     }

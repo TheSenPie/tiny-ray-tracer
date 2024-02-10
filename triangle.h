@@ -15,7 +15,7 @@ public:
     point3 _n1, point3 _n2, point3 _n3,
     point2 _uv1, point2 _uv2, point2 _uv3)
     :
-    v1{_v1}, v2{_v2}, v3{_v3}, n1{_n1}, n2{_n2}, n3{_n3}, uv1{_uv1}, uv2{_uv2}, uv3{_uv2}
+    v1{_v1}, v2{_v2}, v3{_v3}, n1{_n1}, n2{_n2}, n3{_n3}, uv1{_uv1}, uv2{_uv2}, uv3{_uv3}
   {
     // calculate aabb
     bbox.x.min = fmin(bbox.x.min, v1.x());
@@ -157,7 +157,8 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream & out, const triangle & t) {
-	return out << t.v1 << '\n' << t.v2 << '\n' << t.v3 << '\n' << std::endl;
+	return out << "vertices: \n" << t.v1 << '\n' << t.v2 << '\n' << t.v3 << "\n uvs: \n"
+  << t.uv1 << '\n' << t.uv2 << '\n' << t.uv3 << '\n' << std::endl;
 }
 
 #endif
