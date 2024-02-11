@@ -8,6 +8,12 @@
 #include "material.h"
 
 #include <iostream>
+#include <vector>
+#include <future>
+#include <functional>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 class camera {
 public:
@@ -25,25 +31,69 @@ public:
   double defocus_angle{0};   // Variation angle of rays through each pixel
   double focus_dist{10};     // Distance from camera lookfrom to plane of perfect focus
   
+  char* out_path;
+  
   void render(const hittable& world) {
     initialize();
     
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-
-    for (int j = 0; j < image_height; j++) {
-      std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-      for (int i = 0; i < image_width; i++) {
-        color pixel_color{0, 0, 0};
-        for (int sample = 0; sample < samples_per_pixel; sample++) {
-          ray r = get_ray(i,j);
-          pixel_color += ray_color(r, max_depth, world);
-        }
+    std::vector<std::future<std::vector<color>>> buffers;
+    
+    for (auto i = samples_per_pixel; i > 0; i--) {
+      buffers.push_back(std::async(std::bind(&camera::compute, this, std::cref(world))));
+    }
+    
+    auto samples = wait_for_all(buffers);
  
-        write_color(std::cout, pixel_color, samples_per_pixel);
+    std::vector<color> buffer(image_width * image_height);
+    for (auto& sample : samples) {
+      for (int p_sample = 0; p_sample < image_width * image_height; p_sample++) {
+        buffer[p_sample] += sample[p_sample];
       }
     }
     
+    if (!out_path) { // Write to standart output.
+      std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+
+      for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+          write_color(std::cout, buffer[i * image_height + j], samples_per_pixel);
+        }
+      }
+    } else { // Write to png.
+      unsigned char data[3 * image_width * image_height];
+      int idx = 0;
+      for (int j = 0; j < image_height; j++) {
+        for (int i = 0; i < image_width; i++) {
+          unsigned char r,g,b;
+          write_color(r, g, b, buffer[i * image_height + j], samples_per_pixel);
+          data[idx++] = r;
+          data[idx++] = g;
+          data[idx++] = b;
+        }
+      }
+      stbi_write_png(out_path, image_width, image_height, 3, data, 3 * image_width);
+    }
+    
     std::clog << "\rDone.                 \n";
+  }
+  
+  std::vector<color> compute(const hittable& world) {
+    std::vector<color> buffer(image_width * image_height);
+    
+//    std::clog << "w:" << image_width << " h:" << image_height << std::endl;
+    for (int j = 0; j < image_height; j++) {
+      for (int i = 0; i < image_width; i++) {
+        color pixel_color{0, 0, 0};
+//        for (int sample = 0; sample < samples_per_pixel; sample++) {
+          ray r = get_ray(i,j);
+          pixel_color += ray_color(r, max_depth, world);
+//        }
+ 
+        buffer[i * image_height + j] = pixel_color;
+      }
+    }
+ 
+    return buffer;
   }
   
 private:
