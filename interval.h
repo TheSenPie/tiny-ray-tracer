@@ -1,6 +1,8 @@
 #ifndef INTERVAL_H
 #define INTERVAL_H
 
+#include <iostream>
+
 class interval {
 public:
 	double min, max;
@@ -40,5 +42,9 @@ public:
 
 const static interval empty		{ +infinity, -infinity };
 const static interval universe	{ -infinity, +infinity };
+
+inline std::ostream& operator<<(std::ostream & out, const interval &i) {
+	return out << "(" << i.min  << ", " << i.max << ")";
+}
 
 #endif // !INTERVAL_H

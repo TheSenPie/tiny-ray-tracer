@@ -108,6 +108,7 @@ private:
     for (auto p_triangle = triangles.begin(); p_triangle != triangles.end(); p_triangle++) {
       (*p_triangle)->mat = diffuse_mat;
       add(*p_triangle);
+      std::clog << *(*p_triangle) << std::endl;
     }
   }
  

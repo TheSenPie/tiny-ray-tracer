@@ -34,6 +34,12 @@ public:
   char* out_path;
   
   void render(const hittable& world) {
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+    auto t1 = high_resolution_clock::now(); // measure render time
+ 
     initialize();
     
     std::vector<std::future<std::vector<color>>> buffers;
@@ -73,8 +79,11 @@ public:
       }
       stbi_write_png(out_path, image_width, image_height, 3, data, 3 * image_width);
     }
-    
-    std::clog << "\rDone.                 \n";
+ 
+    auto t2 = high_resolution_clock::now();
+    /* Getting number of milliseconds as a double. */
+    duration<double, std::milli> ms_double = t2 - t1;
+    std::clog << "Render time: " << ms_double.count() << "ms" << std::endl;
   }
   
   std::vector<color> compute(const hittable& world) {
@@ -174,7 +183,13 @@ private:
     if (depth <= 0)
         return color(0, 0, 0);
     
+    auto wrld = static_cast<const hittable_list&>(world);
+    
+    #if 1
+    if (intersect_bvh(wrld, r, interval(0.001, infinity), rec, root_node_idx)) {
+    #else
     if (world.hit(r, interval(0.001, infinity), rec)) {
+    #endif
       ray scattered;
       color attenuation;
       if (rec.mat->scatter(r, rec, attenuation, scattered))

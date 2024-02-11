@@ -1,12 +1,12 @@
 #include "rtweekend.h"
 
+#include "bvh.h"
 #include "camera.h"
 #include "color.h"
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
 #include "model.h"
-#include "bvh.h"
 
 #include <array>
 
@@ -14,39 +14,57 @@ int main(int argc, char* argv[])
 {
   hittable_list world;
   
-//  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
+  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
   
-//  auto ground_material = make_shared<lambertian>(checker);
+  auto ground_material = make_shared<lambertian>(checker);
   
-//  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+  // intialize a scene with N random triangles
+//	for (int i = 0; i < 64; i++)
+//	{
+//		vec3 r0 = vec3( random_double(), random_double(), random_double() );
+//		vec3 r1 = vec3( random_double(), random_double(), random_double() );
+//		vec3 r2 = vec3( random_double(), random_double(), random_double() );
+// 
+//    vec3 v1{9* r0 - vec3(5,5,5)};
+//		vec3 v2{v1 + r1};
+//    vec3 v3{v1 + r2};
+//    auto tri = make_shared<triangle>(
+//      v1, v2, v3,
+//      vec3{0, 0, -1},vec3{0, 0, -1},vec3{0, 0, -1},
+//      vec2{0, 0}, vec2{1, 0}, vec2{0, 1});
+//    tri->mat = ground_material;
+//    world.add(tri);
+//	}
+  
+  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
  
-//  for (int a = -111; a < 111; a++) {
-//    for (int b = -11; b < 11; b++) {
-//      auto choose_mat = random_double();
-//      point3 center{a + 0.9*random_double(), 0.2, b + 0.9*random_double()};
-//      
-//      if ((center - point3{4, 0.2, 0}).length() > 0.9) {
-//        shared_ptr<material> sphere_material;
-//        
-//        if (choose_mat < 0.8) {
-//          // diffuse
-//          auto albedo = color::random() * color::random();
-//          sphere_material = make_shared<lambertian>(albedo);
-//          world.add(make_shared<sphere>(center, 0.2, sphere_material));
-//        } else if (choose_mat < 0.95) {
-//            // metal
-//            auto albedo = color::random(0.5, 1);
-//            auto fuzz = random_double(0, 0.5);
-//            sphere_material = make_shared<metal>(albedo, fuzz);
-//            world.add(make_shared<sphere>(center, 0.2, sphere_material));
-//        } else {
-//          // glass
-//          sphere_material = make_shared<dielectric>(1.5);
-//          world.add(make_shared<sphere>(center, 0.2, sphere_material));
-//        }
-//      }
-//    }
-//  }
+  for (int a = -11; a < 11; a++) {
+    for (int b = -11; b < 11; b++) {
+      auto choose_mat = random_double();
+      point3 center{a + 0.9*random_double(), 0.2, b + 0.9*random_double()};
+      
+      if ((center - point3{4, 0.2, 0}).length() > 0.9) {
+        shared_ptr<material> sphere_material;
+        
+        if (choose_mat < 0.8) {
+          // diffuse
+          auto albedo = color::random() * color::random();
+          sphere_material = make_shared<lambertian>(albedo);
+          world.add(make_shared<sphere>(center, 0.2, sphere_material));
+        } else if (choose_mat < 0.95) {
+            // metal
+            auto albedo = color::random(0.5, 1);
+            auto fuzz = random_double(0, 0.5);
+            sphere_material = make_shared<metal>(albedo, fuzz);
+            world.add(make_shared<sphere>(center, 0.2, sphere_material));
+        } else {
+          // glass
+          sphere_material = make_shared<dielectric>(1.5);
+          world.add(make_shared<sphere>(center, 0.2, sphere_material));
+        }
+      }
+    }
+  }
   
   
 //  auto material1 = make_shared<dielectric>(1.5);
@@ -75,11 +93,12 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
-  world.add(make_shared<model>(modelPath.c_str()));
+//  world.add(make_shared<model>(modelPath.c_str()));
 //  world = hittable_list(make_shared<bvh_node>(world));
-  
+ 
+  build_bvh(world);
   
   camera cam;
  
@@ -104,6 +123,23 @@ int main(int argc, char* argv[])
   }
 
   cam.render(world);
-  
 }
 
+
+/**
+  Render sample - dragon.obj
+  Model has: 11102 faces;
+  Render time: 237024ms ~ 4 minutes
+*/
+
+
+// bvh
+//➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png" -- single sphere
+//Render time: 754.14ms
+//➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png" -- many spheres 11 11
+//Render time: 29067.5ms
+// no bvh
+//➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png"
+//Render time: 24297.1ms
+//➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh tris.png"
+//Render time: 4262.82ms

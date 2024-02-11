@@ -9,6 +9,7 @@
 class triangle : public hittable {
 public:
   shared_ptr<material> mat;
+  point3 v1, v2, v3;
   
   triangle(
     point3 _v1, point3 _v2, point3 _v3,
@@ -18,33 +19,25 @@ public:
     v1{_v1}, v2{_v2}, v3{_v3}, n1{_n1}, n2{_n2}, n3{_n3}, uv1{_uv1}, uv2{_uv2}, uv3{_uv3}
   {
     // calculate aabb
-    bbox.x.min = fmin(bbox.x.min, v1.x());
-    bbox.x.min = fmin(bbox.x.min, v2.x());
-    bbox.x.min = fmin(bbox.x.min, v3.x());
-    bbox.x.max = fmax(bbox.x.max, v1.x());
-    bbox.x.max = fmax(bbox.x.max, v2.x());
-    bbox.x.max = fmax(bbox.x.max, v3.x());
+    bbox.x = interval{fmin(bbox.x.min, v1.x()), fmax(bbox.x.max, v1.x())};
+    bbox.x = interval{fmin(bbox.x.min, v2.x()), fmax(bbox.x.max, v2.x())};
+    bbox.x = interval{fmin(bbox.x.min, v3.x()), fmax(bbox.x.max, v3.x())};
 
-    bbox.y.min = fmin(bbox.y.min, v1.y());
-    bbox.y.min = fmin(bbox.y.min, v2.y());
-    bbox.y.min = fmin(bbox.y.min, v3.y());
-    bbox.y.max = fmax(bbox.y.max, v1.y());
-    bbox.y.max = fmax(bbox.y.max, v2.y());
-    bbox.y.max = fmax(bbox.y.max, v3.y());
+    bbox.y = interval{fmin(bbox.y.min, v1.y()), fmax(bbox.y.max, v1.y())};
+    bbox.y = interval{fmin(bbox.y.min, v2.y()), fmax(bbox.y.max, v2.y())};
+    bbox.y = interval{fmin(bbox.y.min, v3.y()), fmax(bbox.y.max, v3.y())};
 
-    bbox.z.min = fmin(bbox.z.min, v1.z());
-    bbox.z.min = fmin(bbox.z.min, v2.z());
-    bbox.z.min = fmin(bbox.z.min, v3.z());
-    bbox.z.max = fmax(bbox.z.max, v1.z());
-    bbox.z.max = fmax(bbox.z.max, v2.z());
-    bbox.z.max = fmax(bbox.z.max, v3.z());
-
+    bbox.z = interval{fmin(bbox.z.min, v1.z()), fmax(bbox.z.max, v1.z())};
+    bbox.z = interval{fmin(bbox.z.min, v2.z()), fmax(bbox.z.max, v2.z())};
+    bbox.z = interval{fmin(bbox.z.min, v3.z()), fmax(bbox.z.max, v3.z())};
+ 
     // callculate centroid
-    center = point3{
-      (bbox.x.min + bbox.x.max) / 2.0,
-      (bbox.y.min + bbox.y.max) / 2.0,
-      (bbox.z.min + bbox.z.max) / 2.0
-    };
+//    center = point3{
+//      (bbox.x.min + bbox.x.max) / 2.0,
+//      (bbox.y.min + bbox.y.max) / 2.0,
+//      (bbox.z.min + bbox.z.max) / 2.0
+//    };
+    center = 0.3333333333333 * (v1 + v2 + v3);
   }
       
   aabb bounding_box() const override { return bbox; }
@@ -79,7 +72,6 @@ public:
  
     friend std::ostream& operator<<(std::ostream & out, const triangle & t);
 private:
-  point3 v1, v2, v3;
   point3 n1, n2, n3;
   vec2 uv1, uv2, uv3;
  
@@ -157,8 +149,10 @@ private:
 };
 
 inline std::ostream& operator<<(std::ostream & out, const triangle & t) {
-	return out << "vertices: \n" << t.v1 << '\n' << t.v2 << '\n' << t.v3 << "\n uvs: \n"
-  << t.uv1 << '\n' << t.uv2 << '\n' << t.uv3 << '\n' << std::endl;
+	return out << "vertices: \n" << t.v1 << '\n' << t.v2 << '\n' << t.v3 << "\nuvs: \n"
+  << t.uv1 << '\n' << t.uv2 << '\n' << t.uv3 << "\naabb: \n"
+  << "x: " << t.bbox.x << " y: " << t.bbox.y << " z: " << t.bbox.z << "\ncentroid: \n"
+  << t.center << std::endl;
 }
 
 #endif
