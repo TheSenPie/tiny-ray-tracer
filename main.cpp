@@ -74,12 +74,12 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
   world.add(make_shared<model>(modelPath.c_str()));
- 
 //  world = hittable_list(make_shared<bvh_node>(world));
+  
   
   camera cam;
  
@@ -93,11 +93,11 @@ int main(int argc, char* argv[])
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
-  cam.lookfrom = point3(3, 2, 10);
+  cam.lookfrom = point3(5, 3, 15);
   cam.lookat   = point3(0, 0,0);
   cam.vup      = vec3(0,1,0);
   cam.defocus_angle = 0.6;
-  cam.focus_dist    = 10.0;
+  cam.focus_dist    = 15.0;
   
   if (argc == 2 && ends_with(argv[1], ".png")) {
     cam.out_path = argv[1];

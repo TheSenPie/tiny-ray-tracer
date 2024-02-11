@@ -54,10 +54,13 @@
 //  }
 //  
 //  aabb bounding_box() const override { return bbox; }
+//  point3 centroid() const override { return center; }
 //private:
 //  shared_ptr<hittable> left;
 //  shared_ptr<hittable> right;
+// 
 //  aabb bbox;
+//  point3 center;
 //  
 //  static bool box_compare(
 //      const shared_ptr<hittable> a, const shared_ptr<hittable> b, int axis_index

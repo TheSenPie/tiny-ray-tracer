@@ -41,7 +41,9 @@ public:
 		return true;
 	}
  
- aabb bounding_box() const override { return bbox; }
+  aabb bounding_box() const override { return bbox; }
+  point3 centroid() const override { return center; }
+ 
 private:
 	point3 center;
 	double radius;
