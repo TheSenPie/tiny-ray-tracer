@@ -9,9 +9,19 @@
 #include "model.h"
 
 #include <array>
+#include <fstream>
 
 int main(int argc, char* argv[])
 {
+//  std::ofstream out("debug-info.txt");
+//
+//  // Get the rdbuf of clog.
+//  // We need it to reset the value before exiting.
+//  auto old_rdbuf = std::clog.rdbuf();
+//
+//  // Set the rdbuf of clog.
+//  std::clog.rdbuf(out.rdbuf());
+  
   hittable_list world;
   
   auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
@@ -36,9 +46,9 @@ int main(int argc, char* argv[])
 //    world.add(tri);
 //	}
   
-  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+//  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
  
-  for (int a = -11; a < 11; a++) {
+  for (int a = -111; a < 111; a++) {
     for (int b = -11; b < 11; b++) {
       auto choose_mat = random_double();
       point3 center{a + 0.9*random_double(), 0.2, b + 0.9*random_double()};
@@ -98,8 +108,16 @@ int main(int argc, char* argv[])
 //  world.add(make_shared<model>(modelPath.c_str()));
 //  world = hittable_list(make_shared<bvh_node>(world));
  
+  std::clog << "Amount of prmiitives: " << world.objects.size() << std::endl;
   build_bvh(world);
-  
+    
+//  for (unsigned int i = 0; i < nodes_used; i++) {
+//    if (!nodes[i].isLeaf()) {
+//      std::clog << i << " left: " << nodes[i].left_first << " right: " << nodes[i].left_first + 1 << " " << nodes[i].bbox.x << nodes[i].bbox.y << nodes[i].bbox.z
+//      << " " << nodes[i].hittable_count << std::endl;
+//    }
+//  }
+
   camera cam;
  
   cam.aspect_ratio      = 16.0 / 9.0;
@@ -123,6 +141,10 @@ int main(int argc, char* argv[])
   }
 
   cam.render(world);
+  
+  // Reset the rdbuf of clog.
+//  std::clog.rdbuf(old_rdbuf);
+  return 0;
 }
 
 
@@ -138,6 +160,14 @@ int main(int argc, char* argv[])
 //Render time: 754.14ms
 //➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png" -- many spheres 11 11
 //Render time: 29067.5ms
+//➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png" -- many spheres 11 11
+//Render time: 8972.48ms
+//➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png" -- many spheres 111 111
+//Render time: 56920.6ms
+//Amount of prmiitives: 4882
+//➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png" -- many spheres 111 111
+//Amount of prmiitives: 4882
+//Render time: 116749ms
 // no bvh
 //➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png"
 //Render time: 24297.1ms

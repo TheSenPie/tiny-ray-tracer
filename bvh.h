@@ -14,7 +14,7 @@ public:
 };
 
 vector<bvh_node> nodes;
-vector<uint> hittable_idx;
+vector<uint> primitives_idx;
 uint root_node_idx = 0, nodes_used = 1;
 
 
@@ -22,9 +22,9 @@ void update_node_bounds(const hittable_list &world, uint node_idx) {
   bvh_node& node = nodes[node_idx];
   node.bbox = aabb{}; // remove this line
   for (uint first = node.left_first, i = 0; i < node.hittable_count; i++) {
-    uint leaf_hittable_idx = hittable_idx[first + i];
-    auto leaf_bbox = world.objects[leaf_hittable_idx]->bounding_box();
-    node.bbox = aabb(node.bbox, leaf_bbox);
+    uint leaf_idx = primitives_idx[first + i];
+    auto primitive_bbox = world.objects[leaf_idx]->bounding_box();
+    node.bbox = aabb(node.bbox, primitive_bbox);
   }
 }
 
@@ -46,10 +46,10 @@ void subdivide(const hittable_list &world, uint node_idx) {
   int i = node.left_first;
   int j = i + node.hittable_count - 1;
   while (i <= j) {
-    if (world.objects[i]->centroid()[axis] < split_pos)
+    if (world.objects[primitives_idx[i]]->centroid()[axis] < split_pos)
       i++;
     else
-      std::swap(hittable_idx[i], hittable_idx[j--]);
+      std::swap(primitives_idx[i], primitives_idx[j--]);
   }
   // abort split if one of the sides is empty
   int left_count = i - node.left_first;
@@ -79,8 +79,8 @@ bool intersect_bvh(const hittable_list &world, const ray& r, interval ray_t,  hi
       auto closest_so_far = ray_t.max;
  
       for (uint i = 0; i < node.hittable_count; i++ ) {
-        uint leaf_hittable_idx = hittable_idx[node.left_first + i];
-        auto leaf_hittable = world.objects[leaf_hittable_idx];
+        uint leaf_idx = primitives_idx[node.left_first + i];
+        auto leaf_hittable = world.objects[leaf_idx];
         if (leaf_hittable->hit(r, interval(ray_t.min, closest_so_far), temp_rec)) {
             hit_anything = true;
             closest_so_far = temp_rec.t;
@@ -97,11 +97,11 @@ bool intersect_bvh(const hittable_list &world, const ray& r, interval ray_t,  hi
 }
 
 void build_bvh(const hittable_list &world) {
-  nodes = vector<bvh_node>(world.objects.size());
-  hittable_idx = vector<uint>(world.objects.size());
+  primitives_idx = vector<uint>(world.objects.size());
+  nodes = vector<bvh_node>(2 * world.objects.size());
   
   // populate triangle index array
-  for (int i = 0; i < world.objects.size(); i++) hittable_idx[i] = i;
+  for (int i = 0; i < world.objects.size(); i++) primitives_idx[i] = i;
  
 //  do not need this step, already calculated
 //  // calculate triangle centroids for partitioning
