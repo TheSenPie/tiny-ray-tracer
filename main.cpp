@@ -74,12 +74,16 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
-  world.add(make_shared<model>(modelPath.c_str()));
-//  world = hittable_list(make_shared<bvh_node>(world));
+  model model{modelPath.c_str()};
+  auto model_bvh = make_shared<bvh_node>(model);
+  world.add(model_bvh);
   
+  std::clog << "Amount of prmiitives: " << world.objects.size() << std::endl;
+  
+  world = hittable_list(make_shared<bvh_node>(world));
   
   camera cam;
  
@@ -107,3 +111,24 @@ int main(int argc, char* argv[])
   
 }
 
+// spheres
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- no bvh
+//Amount of prmiitives: 4882
+//Render time: 52936ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple bvh
+//Amount of prmiitives: 4882
+//Render time: 896.871ms
+
+// dragon model
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- no bvh
+//Model has: 32938 vertices;
+//Model has: 11102 faces; At most: 33306 vertices;
+//Model has normals: true
+//Amount of prmiitives: 1
+//Render time: 250936ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple bvh
+//Model has: 32938 vertices;
+//Model has: 11102 faces; At most: 33306 vertices;
+//Model has normals: true
+//Amount of prmiitives: 1
+//Render time: 3904.27ms
