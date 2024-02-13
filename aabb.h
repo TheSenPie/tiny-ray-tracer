@@ -32,24 +32,43 @@ public:
     return x;
   }
 
-  bool hit(const ray& r, interval ray_t) const {
-    for (int a = 0; a < 3; a++) {
-      auto invD = 1 / r.direction()[a];
-      auto orig = r.origin()[a];
-
-      auto t0 = (axis(a).min - orig) * invD;
-      auto t1 = (axis(a).max - orig) * invD;
-
-      if (invD < 0)
-          std::swap(t0, t1);
-
-      if (t0 > ray_t.min) ray_t.min = t0;
-      if (t1 < ray_t.max) ray_t.max = t1;
-
-      if (ray_t.max <= ray_t.min)
-          return false;
-    }
-    return true;
+//  bool hit(const ray& r, interval ray_t) const {
+//    for (int a = 0; a < 3; a++) {
+//      auto invD = 1 / r.direction()[a];
+//      auto orig = r.origin()[a];
+//
+//      auto t0 = (axis(a).min - orig) * invD;
+//      auto t1 = (axis(a).max - orig) * invD;
+//
+//      if (invD < 0)
+//          std::swap(t0, t1);
+//
+//      if (t0 > ray_t.min) ray_t.min = t0;
+//      if (t1 < ray_t.max) ray_t.max = t1;
+//
+//      if (ray_t.max <= ray_t.min)
+//          return false;
+//    }
+//    return true;
+//  }
+  
+  double hit(const ray& r, interval ray_t) const {
+    double tx1{(x.min - r.origin().x()) / r.direction().x()}, tx2{(x.max - r.origin().x()) / r.direction().x()};
+    double tmin{fmin( tx1, tx2 )}, tmax{fmax( tx1, tx2 )};
+    double ty1{(y.min - r.origin().y()) / r.direction().y()}, ty2{(y.max - r.origin().y()) / r.direction().y()};
+    tmin = fmax( tmin, fmin( ty1, ty2 ) ), tmax = fmin( tmax, fmax( ty1, ty2 ) );
+    double tz1{(z.min - r.origin().z()) / r.direction().z()}, tz2{(z.max - r.origin().z()) / r.direction().z()};
+    tmin = fmax( tmin, fmin( tz1, tz2 ) ), tmax = fmin( tmax, fmax( tz1, tz2 ) );
+    if (tmax >= tmin && tmin < ray_t.max && tmax > 0) return tmin; else return infinity;
+  }
+  
+  inline float area() {
+    vec3 e{
+      x.size(),
+      y.size(),
+      z.size(),
+    };
+    return e.x() * e.y() + e.y() * e.z() + e.z() * e.x();
   }
 };
 #endif

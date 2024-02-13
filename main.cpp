@@ -168,6 +168,9 @@ int main(int argc, char* argv[])
 //➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png" -- many spheres 111 111
 //Amount of prmiitives: 4882
 //Render time: 116749ms
+//➜  tiny-ray-tracer git:(dev) ./out/Debug/tiny-ray-tracer "image - sah speheres.png"
+//Amount of prmiitives: 4882
+//Render time: 50669ms
 // no bvh
 //➜  tiny-ray-tracer git:(dev) ✗ ./out/Debug/tiny-ray-tracer "image - bvh speheres.png"
 //Render time: 24297.1ms

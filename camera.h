@@ -101,6 +101,16 @@ public:
         buffer[i * image_height + j] = pixel_color;
       }
     }
+    
+  for (int y = 0; y < image_height; y+=4) for (int x = 0; x < image_width; x+=4) {
+  for (int v = 0; v < 4; v++ ) for( int u = 0; u < 4; u++ ) {
+    color pixel_color{0, 0, 0};
+    ray r = get_ray(x + u, y + v);
+    pixel_color += ray_color(r, max_depth, world);
+ 
+    buffer[(x + u) * image_height + (y + v)] = pixel_color;
+  }
+  }
  
     return buffer;
   }
@@ -186,7 +196,7 @@ private:
     auto wrld = static_cast<const hittable_list&>(world);
     
     #if 1
-    if (intersect_bvh(wrld, r, interval(0.001, infinity), rec, root_node_idx)) {
+    if (intersect_bvh(wrld, r, interval(0.001, infinity), rec)) {
     #else
     if (world.hit(r, interval(0.001, infinity), rec)) {
     #endif
