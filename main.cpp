@@ -13,13 +13,13 @@
 int main(int argc, char* argv[])
 {
   hittable_list world;
-  
+
 //  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
-  
+//
 //  auto ground_material = make_shared<lambertian>(checker);
-  
+
 //  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
- 
+// 
 //  for (int a = -111; a < 111; a++) {
 //    for (int b = -11; b < 11; b++) {
 //      auto choose_mat = random_double();
@@ -47,8 +47,7 @@ int main(int argc, char* argv[])
 //      }
 //    }
 //  }
-  
-  
+ 
 //  auto material1 = make_shared<dielectric>(1.5);
 //  world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
 
@@ -80,10 +79,10 @@ int main(int argc, char* argv[])
   model model{modelPath.c_str()};
   auto model_bvh = make_shared<bvh_node>(model);
   world.add(model_bvh);
+ 
+  world = hittable_list(make_shared<bvh_node>(world));
   
   std::clog << "Amount of prmiitives: " << world.objects.size() << std::endl;
-  
-  world = hittable_list(make_shared<bvh_node>(world));
   
   camera cam;
  
@@ -102,7 +101,7 @@ int main(int argc, char* argv[])
   cam.vup      = vec3(0,1,0);
   cam.defocus_angle = 0.6;
   cam.focus_dist    = 15.0;
-  
+ 
   if (argc == 2 && ends_with(argv[1], ".png")) {
     cam.out_path = argv[1];
   }
@@ -118,6 +117,9 @@ int main(int argc, char* argv[])
 //➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple bvh
 //Amount of prmiitives: 4882
 //Render time: 896.871ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png"
+//Amount of prmiitives: 1
+//Render time: 1391.54ms
 
 // dragon model
 //➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- no bvh
@@ -132,3 +134,9 @@ int main(int argc, char* argv[])
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 3904.27ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png"
+//Model has: 32938 vertices;
+//Model has: 11102 faces; At most: 33306 vertices;
+//Model has normals: true
+//Amount of prmiitives: 1
+//Render time: 1522.3ms
