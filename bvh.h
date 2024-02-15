@@ -91,17 +91,26 @@ private:
   
   void subdivide() {
     // terminate recursion
-    if (primitive_count <= 2) return;
-    // determine split axis and position
+    // determine split axis using SAH
+    int best_axis = -1;
+    double best_pos = 0, best_cost = infinity;
+    for (int axis = 0; axis < 3; axis++) for (int i = 0; i < primitive_count; i++) {
+      hittable &primitive = *(primitives[first_primitive + i]);
+      double candidate_pos = primitive.centroid()[axis];
+      double cost = evaluate_SAH(*this, axis, candidate_pos);
+      if (cost < best_cost)
+        best_pos = candidate_pos, best_axis = axis, best_cost = cost;
+    }
+    int axis = best_axis;
+    double split_pos = best_pos;
     vec3 extent{
       bbox.x.size(),
       bbox.y.size(),
       bbox.z.size()
     };
-    int axis = 0;
-    if (extent.y() > extent.x()) axis = 1;
-    if (extent.z() > extent[axis]) axis = 2;
-    double split_pos = bbox.axis(axis).min + extent[axis] * 0.5;
+    double parent_area = extent.x() * extent.y() + extent.y() * extent.z() + extent.z() * extent.x();
+    float parent_cost = primitive_count * parent_area;
+    if (best_cost >= parent_cost) return;
     // in-place partition
     size_t i = first_primitive;
     size_t j = i + primitive_count - 1;
@@ -118,6 +127,24 @@ private:
     left = make_shared<bvh_node>(primitives, first_primitive,first_primitive + left_count);
     right = make_shared<bvh_node>(primitives, i, i + primitive_count - left_count);
     primitive_count = 0;
+  }
+  
+  double evaluate_SAH(const bvh_node& node, int axis, double pos) {
+    // determine triangle counts and bounds for this split candidate
+    aabb left_box = aabb(), right_box = aabb();
+    int left_count = 0, right_count = 0;
+    for (int i = 0; i < node.primitive_count; i++) {
+      hittable &primitive = *(node.primitives[first_primitive + i]);
+      if (primitive.centroid()[axis] < pos) {
+        left_count++;
+        left_box = aabb(left_box, primitive.bounding_box());
+      } else {
+        right_count++;
+        right_box = aabb(right_box, primitive.bounding_box());
+      }
+    }
+    double cost = left_count * left_box.area() + right_count * right_box.area();
+    return cost > 0 ? cost : infinity;
   }
   
   static bool box_compare(

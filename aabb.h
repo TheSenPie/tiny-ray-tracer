@@ -51,5 +51,14 @@ public:
     }
     return true;
   }
+  
+  float area() {
+    vec3 extent {
+      x.size(),
+      y.size(),
+      z.size()
+    };
+    return extent.x() * extent.y() + extent.y() * extent.z() + extent.z() * extent.x();
+  }
 };
 #endif

@@ -117,9 +117,12 @@ int main(int argc, char* argv[])
 //➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple bvh
 //Amount of prmiitives: 4882
 //Render time: 896.871ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png"
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple jakko bvh
 //Amount of prmiitives: 1
 //Render time: 1391.54ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- SAH jakko bvh
+//Amount of prmiitives: 1
+//Render time: 1321.69ms
 
 // dragon model
 //➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- no bvh
@@ -134,9 +137,15 @@ int main(int argc, char* argv[])
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 3904.27ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png"
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple jakko bvh
 //Model has: 32938 vertices;
 //Model has: 11102 faces; At most: 33306 vertices;
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 1522.3ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- SAH jakko bvh
+//Model has: 32938 vertices;
+//Model has: 11102 faces; At most: 33306 vertices;
+//Model has normals: true
+//Amount of prmiitives: 1
+//Render time: 1298.32ms
