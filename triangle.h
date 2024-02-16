@@ -29,6 +29,8 @@ public:
     bbox.z = interval{fmin(bbox.z.min, v1.z()), fmax(bbox.z.max, v1.z())};
     bbox.z = interval{fmin(bbox.z.min, v2.z()), fmax(bbox.z.max, v2.z())};
     bbox.z = interval{fmin(bbox.z.min, v3.z()), fmax(bbox.z.max, v3.z())};
+    
+    bbox = bbox.pad();
  
     // callculate centroid
 //    center = point3{
