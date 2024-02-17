@@ -20,33 +20,33 @@ int main(int argc, char* argv[])
 
 //  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
  
-  for (int a = -111; a < 111; a++) {
-    for (int b = -11; b < 11; b++) {
-      auto choose_mat = random_double();
-      point3 center{a + 0.9*random_double(), 0.2, b + 0.9*random_double()};
-      
-      if ((center - point3{4, 0.2, 0}).length() > 0.9) {
-        shared_ptr<material> sphere_material;
-        
-        if (choose_mat < 0.8) {
-          // diffuse
-          auto albedo = color::random() * color::random();
-          sphere_material = make_shared<lambertian>(albedo);
-          world.add(make_shared<sphere>(center, 0.2, sphere_material));
-        } else if (choose_mat < 0.95) {
-            // metal
-            auto albedo = color::random(0.5, 1);
-            auto fuzz = random_double(0, 0.5);
-            sphere_material = make_shared<metal>(albedo, fuzz);
-            world.add(make_shared<sphere>(center, 0.2, sphere_material));
-        } else {
-          // glass
-          sphere_material = make_shared<dielectric>(1.5);
-          world.add(make_shared<sphere>(center, 0.2, sphere_material));
-        }
-      }
-    }
-  }
+//  for (int a = -111; a < 111; a++) {
+//    for (int b = -11; b < 11; b++) {
+//      auto choose_mat = random_double();
+//      point3 center{a + 0.9*random_double(), 0.2, b + 0.9*random_double()};
+//      
+//      if ((center - point3{4, 0.2, 0}).length() > 0.9) {
+//        shared_ptr<material> sphere_material;
+//        
+//        if (choose_mat < 0.8) {
+//          // diffuse
+//          auto albedo = color::random() * color::random();
+//          sphere_material = make_shared<lambertian>(albedo);
+//          world.add(make_shared<sphere>(center, 0.2, sphere_material));
+//        } else if (choose_mat < 0.95) {
+//            // metal
+//            auto albedo = color::random(0.5, 1);
+//            auto fuzz = random_double(0, 0.5);
+//            sphere_material = make_shared<metal>(albedo, fuzz);
+//            world.add(make_shared<sphere>(center, 0.2, sphere_material));
+//        } else {
+//          // glass
+//          sphere_material = make_shared<dielectric>(1.5);
+//          world.add(make_shared<sphere>(center, 0.2, sphere_material));
+//        }
+//      }
+//    }
+//  }
  
 //  auto material1 = make_shared<dielectric>(1.5);
 //  world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
@@ -78,12 +78,12 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
-//  model model{modelPath.c_str()};
-//  auto model_bvh = make_shared<bvh_node>(model);
-//  world.add(model_bvh);
+  model model{modelPath.c_str()};
+  auto model_bvh = make_shared<bvh_node>(model);
+  world.add(model_bvh);
  
   world = hittable_list(make_shared<bvh_node>(world));
   
@@ -116,50 +116,67 @@ int main(int argc, char* argv[])
 }
 
 // spheres
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- no bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- no bvh
 //Amount of prmiitives: 4882
 //Render time: 52936ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- simple bvh
 //Amount of prmiitives: 4882
 //Render time: 896.871ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple jakko bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- simple jakko bvh
 //Amount of prmiitives: 1
 //Render time: 1391.54ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- SAH jakko bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- SAH jakko bvh
 //Amount of prmiitives: 1
 //Render time: 1321.69ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - gaguya.png" -- SAH jakko iterative bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- SAH jakko iterative bvh
 //Amount of prmiitives: 1
 //Render time: 725.51ms
 
 // dragon model
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- no bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- no bvh
 //Model has: 32938 vertices;
 //Model has: 11102 faces; At most: 33306 vertices;
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 250936ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- simple bvh
 //Model has: 32938 vertices;
 //Model has: 11102 faces; At most: 33306 vertices;
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 3904.27ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- simple jakko bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- simple jakko bvh
 //Model has: 32938 vertices;
 //Model has: 11102 faces; At most: 33306 vertices;
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 1522.3ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - kaguya.png" -- SAH jakko bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- SAH jakko bvh
 //Model has: 32938 vertices;
 //Model has: 11102 faces; At most: 33306 vertices;
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 1298.32ms
-//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - gaguya.png" -- SAH jakko iterative bvh
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- SAH jakko iterative bvh
 //Model has: 32938 vertices;
 //Model has: 11102 faces; At most: 33306 vertices;
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 974.8ms
+
+// BVH bild time comparison
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png"
+//Model has: 32938 vertices;
+//Model has: 11102 faces; At most: 33306 vertices;
+//Model has normals: true
+//BVH build time: 8509.01ms
+//Amount of prmiitives: 1
+//Render time: 1068.17ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png"
+//Model has: 32938 vertices;
+//Model has: 11102 faces; At most: 33306 vertices;
+//Model has normals: true
+//BVH build time: 35387.9ms
+//Amount of prmiitives: 1
+//Render time: 1113.28ms
+//➜  tiny-ray-tracer git:(main) ✗

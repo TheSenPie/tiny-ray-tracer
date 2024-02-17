@@ -8,6 +8,9 @@
 
 #include <algorithm>
 
+#define BINS 8
+struct bin { aabb bounds; int primitive_count = 0; };
+
 class bvh_node : public hittable {
 public:
   bvh_node(const hittable_list& list) : bvh_node{list.objects, 0, list.objects.size()} {}
@@ -124,28 +127,71 @@ private:
     };
   }
   
-  void subdivide() {
-    // terminate recursion
-    // determine split axis using SAH
-    int best_axis = -1;
-    double best_pos = 0, best_cost = infinity;
-    for (int axis = 0; axis < 3; axis++) for (int i = 0; i < primitive_count; i++) {
-      hittable &primitive = *(primitives[first_primitive + i]);
-      double candidate_pos = primitive.centroid()[axis];
-      double cost = evaluate_SAH(*this, axis, candidate_pos);
-      if (cost < best_cost)
-        best_pos = candidate_pos, best_axis = axis, best_cost = cost;
+  double find_best_split_plane(int& axis, double& split_pos) {
+    double best_cost = infinity;
+    for (int a = 0; a < 3; a++) {
+      double bounds_min = infinity, bounds_max = -infinity;
+      for (int i = 0; i < primitive_count; i++) {
+        hittable &primitive = *(primitives[first_primitive + i]);
+        bounds_min = fmin(bounds_min, primitive.centroid()[a]);
+        bounds_max = fmax(bounds_max, primitive.centroid()[a]);
+      }
+      if (bounds_min == bounds_max) continue;
+      // populate the bins
+      bin bin[BINS];
+      double scale = BINS / (bounds_max - bounds_min);
+      for (int i = 0; i < primitive_count; i++) {
+        hittable &primitive = *(primitives[first_primitive + i]);
+        int bin_idx = fmin(BINS - 1,
+          (int)((primitive.centroid()[a] - bounds_min) * scale));
+          bin[bin_idx].primitive_count++;
+          bin[bin_idx].bounds = aabb(bin[bin_idx].bounds, primitive.bounding_box());
+      }
+      // gather data for the 7 planes between the 8 bins
+      double left_area[BINS - 1], right_area[BINS - 1];
+      int left_count[BINS - 1], right_count[BINS - 1];
+      aabb left_box = aabb(), right_box = aabb();
+      int left_sum = 0, right_sum = 0;
+      for (int i = 0; i < BINS - 1; i++) {
+        left_sum += bin[i].primitive_count;
+        left_count[i] = left_sum;
+        left_box = aabb(left_box, bin[i].bounds);
+        left_area[i] = left_box.area();
+        right_sum += bin[BINS - 1 - i].primitive_count;
+        right_count[BINS - 2 - i] = right_sum;
+        right_box = aabb(right_box, bin[BINS - 1 - i].bounds);
+        right_area[BINS - 2 - i] = right_box.area();
+      }
+      // calculate SAH cost for the 7 planes
+      scale = (bounds_max - bounds_min) / BINS;
+      for (int i = 0; i < BINS - 1; i++) {
+        double plane_cost = left_count[i] * left_area[i] + right_count[i] * right_area[i];
+        if (plane_cost < best_cost) {
+          axis = a, split_pos = bounds_min + scale * (i + 1), best_cost = plane_cost;
+        }
+      }
     }
-    int axis = best_axis;
-    double split_pos = best_pos;
+    return best_cost;
+  }
+ 
+  double calculate_node_cost() {
     vec3 extent{
       bbox.x.size(),
       bbox.y.size(),
       bbox.z.size()
     };
-    double parent_area = extent.x() * extent.y() + extent.y() * extent.z() + extent.z() * extent.x();
-    float parent_cost = primitive_count * parent_area;
-    if (best_cost >= parent_cost) return;
+    double surface_area = extent.x() * extent.y() + extent.y() * extent.z() + extent.z() * extent.x();
+    return primitive_count * surface_area;
+  }
+ 
+  void subdivide() {
+    // terminate recursion
+    // determine split axis using SAH
+    int axis;
+    double split_pos;
+    double split_cost = find_best_split_plane(axis, split_pos);
+    float nosplit_cost = calculate_node_cost();
+    if (split_cost >= nosplit_cost) return;
     // in-place partition
     size_t i = first_primitive;
     size_t j = i + primitive_count - 1;
