@@ -32,7 +32,7 @@ public:
     return x;
   }
 
-  bool hit(const ray& r, interval ray_t) const {
+  double hit(const ray& r, interval ray_t) const {
     for (int a = 0; a < 3; a++) {
       auto invD = 1 / r.direction()[a];
       auto orig = r.origin()[a];
@@ -47,9 +47,9 @@ public:
       if (t1 < ray_t.max) ray_t.max = t1;
 
       if (ray_t.max <= ray_t.min)
-          return false;
+          return infinity;
     }
-    return true;
+    return ray_t.min;
   }
   
   float area() {

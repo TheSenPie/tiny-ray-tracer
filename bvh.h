@@ -47,21 +47,56 @@ public:
 //
 //    bbox = aabb(left->bounding_box(), right->bounding_box());
   }
-
+ 
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
-    if (!bbox.hit(r, ray_t))
-      return false;
+    const bvh_node *curr = this, *stack[64];
+    uint stack_ptr = 0;
+    auto closest_so_far = ray_t.max;
+    bool hit_anything = false;
 
-    if (primitive_count > 0) {
-      bool hit_anything = false;
-      for (size_t i = 0; i < primitive_count; i++ )
-        hit_anything = hit_anything || (primitives)[first_primitive + i]->hit(r, ray_t, rec);
-      return hit_anything;
-    } else {
-      bool hit_left = left->hit(r, ray_t, rec);
-      bool hit_right = right->hit(r, interval(ray_t.min, hit_left ? rec.t : ray_t.max), rec);
-      return hit_left || hit_right;
+    while (true) {
+      if (curr->primitive_count > 0) // is leaf
+      {
+        hit_record temp_rec;
+ 
+        for (size_t i = 0; i < curr->primitive_count; i++) {
+          hittable& primitive = *(curr->primitives[curr->first_primitive + i]);
+          if (primitive.hit(r, interval(ray_t.min, closest_so_far), temp_rec)) {
+            hit_anything = true;
+            closest_so_far = temp_rec.t;
+            rec = temp_rec;
+          }
+        }
+        if (stack_ptr == 0)
+          return hit_anything;
+        else curr = stack[--stack_ptr];
+      }
+      else
+      {
+        const bvh_node* child1 = curr->left.get();
+        interval i_a = interval(ray_t.min, closest_so_far);
+        double dist1 = child1->bbox.hit(r, i_a);
+        
+        const bvh_node* child2 = curr->right.get();
+        interval i_b = interval(ray_t.min, closest_so_far);
+        double dist2 = child2->bbox.hit(r, i_b);
+        if (dist1 > dist2) { std::swap(dist1, dist2); std::swap(child1, child2); }
+        if (dist1 == infinity)
+        {
+          if (stack_ptr == 0)
+            break;
+          else
+            curr = stack[--stack_ptr];
+        }
+        else
+        {
+          curr = child1;
+          if (dist2 != infinity)
+          stack[stack_ptr++] = child2;
+        }
+      }
     }
+    return hit_anything;
   }
 
   aabb bounding_box() const override { return bbox; }
@@ -69,8 +104,8 @@ public:
   point3 centroid() const override { return center; }
 
 private:
-  shared_ptr<hittable> left;
-  shared_ptr<hittable> right;
+  shared_ptr<bvh_node> left;
+  shared_ptr<bvh_node> right;
   aabb bbox;
   point3 center;
   size_t first_primitive, primitive_count;
