@@ -79,6 +79,7 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
   string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
   model model{modelPath.c_str()};
@@ -94,7 +95,7 @@ int main(int argc, char* argv[])
   cam.aspect_ratio      = 16.0 / 9.0;
 //  cam.image_width       = 1200; // prod
 //  cam.samples_per_pixel = 500; // prod
-  cam.image_width = 600;
+//  cam.image_width = 600;
   cam.samples_per_pixel = 10;
   cam.image_width = 400;
   cam.samples_per_pixel = 12;
