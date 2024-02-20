@@ -78,12 +78,14 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
-  model model{modelPath.c_str()};
-  auto model_bvh = make_shared<bvh_node>(model);
+  model m{modelPath.c_str()};
+  shared_ptr<hittable> model_bvh = make_shared<bvh_node>(m);
+  model_bvh = make_shared<rotate_y>(model_bvh, 90);
+  model_bvh = make_shared<translate>(model_bvh, vec3{-2, -7.5, 0});
   world.add(model_bvh);
  
   world = hittable_list(make_shared<bvh_node>(world));
@@ -102,11 +104,11 @@ int main(int argc, char* argv[])
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
-  cam.lookfrom = point3(5, 3, 15);
+  cam.lookfrom = point3(0, 0, 50);
   cam.lookat   = point3(0, 0,0);
   cam.vup      = vec3(0,1,0);
   cam.defocus_angle = 0.6;
-  cam.focus_dist    = 15.0;
+  cam.focus_dist    = 50;
  
   if (argc == 2 && ends_with(argv[1], ".png")) {
     cam.out_path = argv[1];

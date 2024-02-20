@@ -17,11 +17,20 @@ public:
     hittable_list() {}
     hittable_list(shared_ptr<hittable> object) { add(object); }
 
-    void clear() { objects.clear(); }
+    void clear() {
+      objects.clear();
+      bbox = aabb();
+      center = point3();
+    }
 
     void add(const shared_ptr<hittable> object) {
-        objects.push_back(object);
-        bbox = aabb(bbox, object->bounding_box());
+      objects.push_back(object);
+      bbox = aabb(bbox, object->bounding_box());
+      center = vec3{
+        (bbox.x.max + bbox.x.min) / 2.0,
+        (bbox.y.max + bbox.y.min) / 2.0,
+        (bbox.z.max + bbox.z.min) / 2.0
+      };
     }
 
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
@@ -42,10 +51,10 @@ public:
     
     aabb bounding_box() const override { return bbox; }
     
-    point3 centroid() const override { return c; }
+    point3 centroid() const override { return center; }
 private:
   aabb bbox;
-  point3 c;
+  point3 center;
 };
 
 #endif
