@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-#define BINS 8
+#define BINS 4
 struct bin { aabb bounds; int primitive_count = 0; };
 
 class bvh_node : public hittable {
@@ -104,13 +104,13 @@ public:
 
   aabb bounding_box() const override { return bbox; }
     
-  point3 centroid() const override { return center; }
+  point3f centroid() const override { return center; }
 
 private:
   shared_ptr<bvh_node> left;
   shared_ptr<bvh_node> right;
   aabb bbox;
-  point3 center;
+  point3f center;
   size_t first_primitive, primitive_count;
  
   vector<shared_ptr<hittable>> primitives;
@@ -120,17 +120,13 @@ private:
     for (size_t i = 0; i < primitive_count; i++) {
       bbox = aabb(bbox, (primitives)[first_primitive + i]->bounding_box());
     }
-    center = vec3{
-      (bbox.x.max + bbox.x.min) / 2.0,
-      (bbox.y.max + bbox.y.min) / 2.0,
-      (bbox.z.max + bbox.z.min) / 2.0
-    };
+    center = (bbox.bmax + bbox.bmin) / 2.0f;
   }
   
-  double find_best_split_plane(int& axis, double& split_pos) {
-    double best_cost = infinity;
+  float find_best_split_plane(int& axis, float& split_pos) {
+    float best_cost = infinity;
     for (int a = 0; a < 3; a++) {
-      double bounds_min = infinity, bounds_max = -infinity;
+      float bounds_min = infinity, bounds_max = -infinity;
       for (int i = 0; i < primitive_count; i++) {
         hittable &primitive = *(primitives[first_primitive + i]);
         bounds_min = fmin(bounds_min, primitive.centroid()[a]);
@@ -139,7 +135,7 @@ private:
       if (bounds_min == bounds_max) continue;
       // populate the bins
       bin bin[BINS];
-      double scale = BINS / (bounds_max - bounds_min);
+      float scale = BINS / (bounds_max - bounds_min);
       for (int i = 0; i < primitive_count; i++) {
         hittable &primitive = *(primitives[first_primitive + i]);
         int bin_idx = fmin(BINS - 1,
@@ -148,7 +144,7 @@ private:
           bin[bin_idx].bounds = aabb(bin[bin_idx].bounds, primitive.bounding_box());
       }
       // gather data for the 7 planes between the 8 bins
-      double left_area[BINS - 1], right_area[BINS - 1];
+      float left_area[BINS - 1], right_area[BINS - 1];
       int left_count[BINS - 1], right_count[BINS - 1];
       aabb left_box = aabb(), right_box = aabb();
       int left_sum = 0, right_sum = 0;
@@ -165,7 +161,7 @@ private:
       // calculate SAH cost for the 7 planes
       scale = (bounds_max - bounds_min) / BINS;
       for (int i = 0; i < BINS - 1; i++) {
-        double plane_cost = left_count[i] * left_area[i] + right_count[i] * right_area[i];
+        float plane_cost = left_count[i] * left_area[i] + right_count[i] * right_area[i];
         if (plane_cost < best_cost) {
           axis = a, split_pos = bounds_min + scale * (i + 1), best_cost = plane_cost;
         }
@@ -174,13 +170,9 @@ private:
     return best_cost;
   }
  
-  double calculate_node_cost() {
-    vec3 extent{
-      bbox.x.size(),
-      bbox.y.size(),
-      bbox.z.size()
-    };
-    double surface_area = extent.x() * extent.y() + extent.y() * extent.z() + extent.z() * extent.x();
+  float calculate_node_cost() {
+    vec3f extent = bbox.bmax - bbox.bmin;
+    float surface_area = extent.x() * extent.y() + extent.y() * extent.z() + extent.z() * extent.x();
     return primitive_count * surface_area;
   }
  
@@ -188,8 +180,8 @@ private:
     // terminate recursion
     // determine split axis using SAH
     int axis;
-    double split_pos;
-    double split_cost = find_best_split_plane(axis, split_pos);
+    float split_pos;
+    float split_cost = find_best_split_plane(axis, split_pos);
     float nosplit_cost = calculate_node_cost();
     if (split_cost >= nosplit_cost) return;
     // in-place partition
@@ -210,7 +202,7 @@ private:
     primitive_count = 0;
   }
   
-  double evaluate_SAH(const bvh_node& node, int axis, double pos) {
+  float evaluate_SAH(const bvh_node& node, int axis, float pos) {
     // determine triangle counts and bounds for this split candidate
     aabb left_box = aabb(), right_box = aabb();
     int left_count = 0, right_count = 0;
@@ -224,14 +216,14 @@ private:
         right_box = aabb(right_box, primitive.bounding_box());
       }
     }
-    double cost = left_count * left_box.area() + right_count * right_box.area();
+    float cost = left_count * left_box.area() + right_count * right_box.area();
     return cost > 0 ? cost : infinity;
   }
   
   static bool box_compare(
     const shared_ptr<hittable> a, const shared_ptr<hittable> b, int axis_index
   ) {
-    return a->bounding_box().axis(axis_index).min < b->bounding_box().axis(axis_index).min;
+    return a->bounding_box().bmin[axis_index] < b->bounding_box().bmin[axis_index];
   }
 
   static bool box_x_compare (const shared_ptr<hittable> a, const shared_ptr<hittable> b) {

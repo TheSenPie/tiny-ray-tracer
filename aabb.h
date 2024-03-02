@@ -5,31 +5,21 @@
 
 class aabb {
 public:
-  interval x, y, z;
-  
-  aabb() {}   // The default AABB is epty, since intervals are empty by default.
-  
-  aabb(const interval& ix, const interval& iy, const interval& iz)
-    : x{ix}, y{iy}, z{iz} { }
-      
-  aabb(const point3& a, const point3& b) {
+  point3f bmin = point3f{infinity, infinity, infinity};
+  point3f bmax = point3f{-infinity, -infinity, -infinity};
+
+  aabb() {}   // The default AABB is empty, since intervals are empty by default.
+
+  aabb(const point3f& a, const point3f& b) {
     // Treat the two points a and b as extrema for the bounding box, so we don't require a
     // particular minimum/maxium coordinate order.
-    x = interval(fmin(a[0], b[0]), fmax(a[0], b[0]));
-    y = interval(fmin(a[1], b[1]), fmax(a[1], b[1]));
-    z = interval(fmin(a[2], b[2]), fmax(a[2], b[2]));
+    bmin = fminf(a, b);
+    bmax = fmaxf(a, b);
   }
   
   aabb(const aabb& box0, const aabb& box1) {
-    x = interval(box0.x, box1.x);
-    y = interval(box0.y, box1.y);
-    z = interval(box0.z, box1.z);
-  }
-  
-  const interval& axis(int n) const {
-    if (n == 1) return y;
-    if (n == 2) return z;
-    return x;
+    bmin = fminf(box0.bmin, box1.bmin);
+    bmax = fmaxf(box0.bmax, box1.bmax);
   }
 
   double hit(const ray& r, interval ray_t) const {
@@ -37,8 +27,8 @@ public:
       auto invD = 1 / r.direction()[a];
       auto orig = r.origin()[a];
 
-      auto t0 = (axis(a).min - orig) * invD;
-      auto t1 = (axis(a).max - orig) * invD;
+      auto t0 = (bmin[a] - orig) * invD;
+      auto t1 = (bmax[a] - orig) * invD;
 
       if (invD < 0)
           std::swap(t0, t1);
@@ -53,30 +43,34 @@ public:
   }
   
   float area() {
-    vec3 extent {
-      x.size(),
-      y.size(),
-      z.size()
-    };
+    vec3f extent = bmax - bmin;
     return extent.x() * extent.y() + extent.y() * extent.z() + extent.z() * extent.x();
   }
   
-  aabb pad() {
+  aabb pad() const {
     // Return an AABB that has no side narrower than some delta, padding if necessary.
-    double delta = 0.0001;
-    interval new_x = (x.size() >= delta) ? x : x.expand(delta);
-    interval new_y = (y.size() >= delta) ? y : y.expand(delta);
-    interval new_z = (z.size() >= delta) ? z : z.expand(delta);
+    float delta = 0.0001f;
+    float delta2 = delta / 2.0f;
+    vec3f tmp_bmin{bmin}, tmp_bmax{bmax};
+    
+    if (abs(bmax.x() - bmin.x()) < delta)
+      tmp_bmin[0] -= delta2, tmp_bmax[0] += delta2;
 
-    return aabb(new_x, new_y, new_z);
+    if (abs(bmax.y() - bmin.y()) < delta)
+      tmp_bmin[1] -= delta2, tmp_bmax[1] += delta2;
+
+    if (abs(bmax.z() - bmin.z()) < delta)
+      tmp_bmin[2] -= delta2, tmp_bmax[2] += delta2;
+
+    return aabb(tmp_bmin, tmp_bmax);
   }
 };
 
-aabb operator+(const aabb& bbox, const vec3& offset) {
-    return aabb(bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z());
+aabb operator+(const aabb& bbox, const vec3f& offset) {
+    return aabb{bbox.bmin + offset, bbox.bmax + offset};
 }
 
-aabb operator+(const vec3& offset, const aabb& bbox) {
+aabb operator+(const vec3f& offset, const aabb& bbox) {
     return bbox + offset;
 }
 

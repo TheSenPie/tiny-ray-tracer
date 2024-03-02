@@ -18,18 +18,13 @@ public:
     v1{_v1}, v2{_v2}, v3{_v3}, n1{_n1}, n2{_n2}, n3{_n3}, uv1{_uv1}, uv2{_uv2}, uv3{_uv3}
   {
     // calculate aabb
-    bbox.x = interval{fmin(bbox.x.min, v1.x()), fmax(bbox.x.max, v1.x())};
-    bbox.x = interval{fmin(bbox.x.min, v2.x()), fmax(bbox.x.max, v2.x())};
-    bbox.x = interval{fmin(bbox.x.min, v3.x()), fmax(bbox.x.max, v3.x())};
-
-    bbox.y = interval{fmin(bbox.y.min, v1.y()), fmax(bbox.y.max, v1.y())};
-    bbox.y = interval{fmin(bbox.y.min, v2.y()), fmax(bbox.y.max, v2.y())};
-    bbox.y = interval{fmin(bbox.y.min, v3.y()), fmax(bbox.y.max, v3.y())};
-
-    bbox.z = interval{fmin(bbox.z.min, v1.z()), fmax(bbox.z.max, v1.z())};
-    bbox.z = interval{fmin(bbox.z.min, v2.z()), fmax(bbox.z.max, v2.z())};
-    bbox.z = interval{fmin(bbox.z.min, v3.z()), fmax(bbox.z.max, v3.z())};
-    
+    bbox.bmin = fminf(bbox.bmin, vec3f{v1});
+    bbox.bmin = fminf(bbox.bmin, vec3f{v2});
+    bbox.bmin = fminf(bbox.bmin, vec3f{v3});
+    bbox.bmax = fmaxf(bbox.bmax, vec3f{v1});
+    bbox.bmax = fmaxf(bbox.bmax, vec3f{v2});
+    bbox.bmax = fmaxf(bbox.bmax, vec3f{v3});
+ 
     bbox = bbox.pad();
  
     // callculate centroid
@@ -43,7 +38,7 @@ public:
       
   aabb bounding_box() const override { return bbox; }
   
-  point3 centroid() const override { return center; }
+  point3f centroid() const override { return center; }
 
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
     double t, u, v; // t - represents the distance from ray origin to hit point

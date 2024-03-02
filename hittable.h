@@ -33,7 +33,7 @@ public:
   
   virtual aabb bounding_box() const = 0;
  
-  virtual point3 centroid() const = 0;
+  virtual point3f centroid() const = 0;
 };
 
 class translate : public hittable {
@@ -42,11 +42,7 @@ public:
   : object(p), offset(displacement)
   {
       bbox = object->bounding_box() + offset;
-      center = vec3{
-        (bbox.x.max + bbox.x.min) / 2.0,
-        (bbox.y.max + bbox.y.min) / 2.0,
-        (bbox.z.max + bbox.z.min) / 2.0
-      };
+      center = (bbox.bmax + bbox.bmin) / 2.0f;
   }
   
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
@@ -65,13 +61,13 @@ public:
   
   aabb bounding_box() const override { return bbox; }
   
-  point3 centroid() const override { return center; }
+  point3f centroid() const override { return center; }
 
 private:
   shared_ptr<hittable> object;
   vec3 offset;
   aabb bbox;
-  vec3 center;
+  vec3f center;
 };
 
 class rotate_y : public hittable {
@@ -88,9 +84,9 @@ public:
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 2; j++) {
         for (int k = 0; k < 2; k++) {
-          auto x = i*bbox.x.max + (1-i)*bbox.x.min;
-          auto y = j*bbox.y.max + (1-j)*bbox.y.min;
-          auto z = k*bbox.z.max + (1-k)*bbox.z.min;
+          auto x = i*bbox.bmax.x() + (1-i)*bbox.bmin.x();
+          auto y = j*bbox.bmax.y() + (1-j)*bbox.bmin.y();
+          auto z = k*bbox.bmax.z() + (1-k)*bbox.bmin.z();
 
           auto newx =  cos_theta*x + sin_theta*z;
           auto newz = -sin_theta*x + cos_theta*z;
@@ -106,11 +102,7 @@ public:
     }
 
     bbox = aabb(min, max);
-    center = vec3{
-      (bbox.x.max + bbox.x.min) / 2.0,
-      (bbox.y.max + bbox.y.min) / 2.0,
-      (bbox.z.max + bbox.z.min) / 2.0
-    };
+    center = (bbox.bmax + bbox.bmin) / 2.0f;
   }
 
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
@@ -148,14 +140,14 @@ public:
     
   aabb bounding_box() const override { return bbox; }
   
-  point3 centroid() const override { return center; }
+  point3f centroid() const override { return center; }
  
 private:
   shared_ptr<hittable> object;
   double sin_theta;
   double cos_theta;
   aabb bbox;
-  vec3 center;
+  vec3f center;
 };
 
 #endif

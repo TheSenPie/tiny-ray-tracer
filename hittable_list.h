@@ -20,17 +20,13 @@ public:
     void clear() {
       objects.clear();
       bbox = aabb();
-      center = point3();
+      center = point3f();
     }
 
     void add(const shared_ptr<hittable> object) {
       objects.push_back(object);
       bbox = aabb(bbox, object->bounding_box());
-      center = vec3{
-        (bbox.x.max + bbox.x.min) / 2.0,
-        (bbox.y.max + bbox.y.min) / 2.0,
-        (bbox.z.max + bbox.z.min) / 2.0
-      };
+      center = (bbox.bmax + bbox.bmin) / 2.0f;
     }
 
     bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
@@ -51,10 +47,10 @@ public:
     
     aabb bounding_box() const override { return bbox; }
     
-    point3 centroid() const override { return center; }
+    point3f centroid() const override { return center; }
 private:
   aabb bbox;
-  point3 center;
+  point3f center;
 };
 
 #endif

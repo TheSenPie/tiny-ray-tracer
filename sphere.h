@@ -9,7 +9,7 @@ public:
 	sphere(point3 _center, double _radius, shared_ptr<material> _material)
     : center{ _center }, radius{ _radius }, mat{_material} {
       auto rvec = vec3(radius, radius, radius);
-      bbox = aabb(center - rvec, center + rvec);
+      bbox = aabb(vec3f{center} - rvec, vec3f{center} + rvec);
     };
 
 	bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
@@ -42,7 +42,7 @@ public:
 	}
  
   aabb bounding_box() const override { return bbox; }
-  point3 centroid() const override { return center; }
+  point3f centroid() const override { return vec3f{center}; }
  
 private:
 	point3 center;

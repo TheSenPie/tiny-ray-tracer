@@ -149,4 +149,108 @@ inline vec3 refract(const vec3& uv, const vec3&n, double etai_over_etat) {
   return r_out_perp + r_out_parallel;
 }
 
+inline vec3 fminf( const vec3& a, const vec3& b ) { return vec3{ fminf( a.x(), b.x() ), fminf( a.y(), b.y() ), fminf( a.z(), b.z() ) }; }
+inline vec3 fmaxf( const vec3& a, const vec3& b ) { return vec3{ fmax( a.x(), b.x() ), fmax( a.y(), b.y() ), fmax( a.z(), b.z() ) }; }
+
+/* float version */
+class vec3f {
+public:
+  float e[3];
+
+  vec3f() : e{ 0.0f, 0.0f, 0.0f } {}
+  vec3f(float e0, float e1, float e2) : e{e0, e1, e2} {}
+  vec3f(const vec3& other) : e{(float) other.x(), (float) other.y(), (float) other.z()} {}
+
+  float x() const { return e[0]; }
+  float y() const { return e[1]; }
+  float z() const { return e[2]; }
+
+  vec3f operator-() const { return vec3f{ -e[0], -e[1], -e[2] }; }
+  float operator[](int i) const { return e[i]; }
+  float& operator[](int i) { return e[i]; }
+
+  vec3f& operator+=(const vec3f& v) {
+    e[0] += v.e[0];
+    e[1] += v.e[1];
+    e[2] += v.e[2];
+    return* this;
+  }
+
+  vec3f& operator*=(float t) {
+    e[0] *= t;
+    e[1] *= t;
+    e[2] *= t;
+    return *this;
+  }
+
+  vec3f& operator/=(float t) {
+    e[0] /= t;
+    e[1] /= t;
+    e[2] /= t;
+    return* this;
+  }
+
+  float length() {
+    return sqrt(length_squared());
+  }
+
+  float length_squared() {
+    return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
+  }
+  
+  bool near_zero() const {
+    // Return true if the vector is close to zero in all dimensions.
+    auto s = 1e-8;
+    return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+   }
+};
+
+// point3f is just an alias for vec3f, but useful for geometric clarity in the code.
+using point3f = vec3f;
+
+// Vector Utility Functions
+
+inline std::ostream& operator<<(std::ostream & out, const vec3f & v) {
+	return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
+}
+
+inline vec3f operator+(const vec3f& u, const vec3f& v) {
+	return vec3f{ u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2] };
+}
+
+inline vec3f operator-(const vec3f& u, const vec3f& v) {
+	return vec3f{ u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2] };
+}
+
+inline vec3f operator*(const vec3f& u, const vec3f& v) {
+	return vec3f{ u.e[0] * v.e[0], u.e[1] * v.e[1], u.e[2] * v.e[2] };
+}
+
+inline vec3f operator*(float t, const vec3f &v) {
+	return vec3f{t*v.e[0], t*v.e[1], t*v.e[2]};
+}
+
+inline vec3f operator/(const vec3f& v, float t) {
+	return (1/t) * v;
+}
+
+inline double dot(const vec3f& u, const vec3f& v) {
+	return u.e[0] * v.e[0] +
+		u.e[1] * v.e[1] +
+		u.e[2] * v.e[2];
+}
+
+inline vec3f cross(const vec3f& u, const vec3f& v) {
+	return vec3f{u.e[1] * v.e[2] - u.e[2] * v.e[1],
+		u.e[2] * v.e[0] - u.e[0] * v.e[2],
+		u.e[0] * v.e[1] - u.e[1] * v.e[0]};
+}
+
+inline vec3f unit_vector(vec3f v) {
+	return v / v.length();
+}
+
+inline vec3f fminf( const vec3f& a, const vec3f& b ) { return vec3f{ fminf( a.x(), b.x() ), fminf( a.y(), b.y() ), fminf( a.z(), b.z() ) }; }
+inline vec3f fmaxf( const vec3f& a, const vec3f& b ) { return vec3f{ fmax( a.x(), b.x() ), fmax( a.y(), b.y() ), fmax( a.z(), b.z() ) }; }
+
 #endif
