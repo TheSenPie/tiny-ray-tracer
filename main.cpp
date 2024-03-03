@@ -79,44 +79,65 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon-high-res.obj";
   string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo.obj";
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wheelDefault.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
+//  std::cout << sizeof(uint) << std::endl;
   model m{modelPath.c_str()};
-  shared_ptr<hittable> model_bvh = make_shared<bvh_node>(m);
-  model_bvh = make_shared<rotate_y>(model_bvh, 90);
-  model_bvh = make_shared<translate>(model_bvh, vec3{-2, -7.5, 0});
-  world.add(model_bvh);
- 
-  world = hittable_list(make_shared<bvh_node>(world));
+  bvh<triangle> b{m.primitives, m.primitives_count};
+//  world.add(make_shared<bvh<triangle>>(m.primitives, m.primitives_count));
+//  shared_ptr<hittable> model_bvh = make_shared<bvh_node>(m);
+//  model_bvh = make_shared<rotate_y>(model_bvh, 90);
+//  model_bvh = make_shared<translate>(model_bvh, vec3{-2, -7.5, 0});
+//  world.add(model_bvh);
+//
+//  world = hittable_list(make_shared<bvh_node>(world));
   
   std::clog << "Amount of prmiitives: " << world.objects.size() << std::endl;
   
   camera cam;
  
-  cam.aspect_ratio      = 16.0 / 9.0;
+//  cam.aspect_ratio      = 16.0 / 9.0;
+//  cam.aspect_ratio      = 1.0;
 //  cam.image_width       = 1200; // prod
 //  cam.samples_per_pixel = 500; // prod
-//  cam.image_width = 600;
+  cam.image_width = 1000;
   cam.samples_per_pixel = 10;
-  cam.image_width = 400;
-  cam.samples_per_pixel = 12;
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
-  cam.lookfrom = point3(0, 0, 50);
-  cam.lookat   = point3(0, 0,0);
+  cam.lookfrom = point3(5, 7, 50.0);
+  cam.lookat   = point3(0, 7,0);
   cam.vup      = vec3(0,1,0);
   cam.defocus_angle = 0.6;
-  cam.focus_dist    = 50;
+  cam.focus_dist    = 50.0;
  
   if (argc == 2 && ends_with(argv[1], ".png")) {
     cam.out_path = argv[1];
   }
 
-  cam.render(world);
+  cam.render(b);
   
 }
+
+// robot
+//  cam.vfov     = 20;
+//  cam.lookfrom = point3(5, 7, 50.0);
+//  cam.lookat   = point3(0, 7,0);
+//  cam.vup      = vec3(0,1,0);
+//  cam.defocus_angle = 0.6;
+//  cam.focus_dist    = 50.0;
+
+// dragon
+//  cam.vfov     = 20;
+//  cam.lookfrom = point3(5, 3.5, 15);
+//  cam.lookat   = point3(0, 0.5,0);
+//  cam.vup      = vec3(0,1,0);
+//  cam.defocus_angle = 0.6;
+//  cam.focus_dist    = 15.0;
+
 
 // spheres
 //➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- no bvh
@@ -166,6 +187,13 @@ int main(int argc, char* argv[])
 //Model has normals: true
 //Amount of prmiitives: 1
 //Render time: 974.8ms
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png" -- SAH jakko iterative bvh code refactor
+//Mesh has: 2612235 vertices;
+//Mesh has: 871414 faces; At most: 2614242 vertices;
+//Mesh has normals: true
+//BVH construction time: 9095.76ms
+//Amount of prmiitives: 0
+//Render time: 161595ms
 
 // BVH bild time comparison
 //➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png"

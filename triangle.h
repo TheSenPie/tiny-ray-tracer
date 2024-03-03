@@ -8,7 +8,13 @@
 
 class triangle : public hittable {
 public:
-  shared_ptr<material> mat;
+  point3 v1, v2, v3;
+  point3 n1, n2, n3;
+  vec2 uv1, uv2, uv3;
+ 
+  shared_ptr<material> mat = nullptr;
+  
+  triangle() = default;
   
   triangle(
     point3 _v1, point3 _v2, point3 _v3,
@@ -17,7 +23,11 @@ public:
     :
     v1{_v1}, v2{_v2}, v3{_v3}, n1{_n1}, n2{_n2}, n3{_n3}, uv1{_uv1}, uv2{_uv2}, uv3{_uv3}
   {
-    // calculate aabb
+    update_bounds();
+  }
+  
+  void update_bounds () {
+     // calculate aabb
     bbox.bmin = fminf(bbox.bmin, vec3f{v1});
     bbox.bmin = fminf(bbox.bmin, vec3f{v2});
     bbox.bmin = fminf(bbox.bmin, vec3f{v3});
@@ -33,8 +43,9 @@ public:
 //      (bbox.y.min + bbox.y.max) / 2.0,
 //      (bbox.z.min + bbox.z.max) / 2.0
 //    };
-    center = 0.3333333333333 * (v1 + v2 + v3);
+    center = 0.3333333333333 * (v1 + v2 + v3); 
   }
+  
       
   aabb bounding_box() const override { return bbox; }
   
@@ -68,10 +79,6 @@ public:
  
     friend std::ostream& operator<<(std::ostream & out, const triangle & t);
 private:
-  point3 v1, v2, v3;
-  point3 n1, n2, n3;
-  vec2 uv1, uv2, uv3;
- 
   point3 center;
   aabb bbox;
   

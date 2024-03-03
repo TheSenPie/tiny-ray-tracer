@@ -93,8 +93,8 @@ public:
     for (int j = 0; j < image_height; j++) {
       for (int i = 0; i < image_width; i++) {
         color pixel_color{0, 0, 0};
-          ray r = get_ray(i,j);
-          pixel_color += ray_color(r, max_depth, world);
+        ray r = get_ray(i,j);
+        pixel_color += ray_color(r, max_depth, world);
  
         buffer[i * image_height + j] = pixel_color;
       }

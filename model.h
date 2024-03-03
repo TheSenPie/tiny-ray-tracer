@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <cstdlib>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -15,14 +16,23 @@
 using std::vector;
 using std::string;
 
-class model : public hittable_list {
+class model {
 public:
+  triangle* primitives;
+  int primitives_count = 0;
+
   // constructor, expects a filepath to a 3D model.
   model(const char* path) {
     auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
     checker_mat = make_shared<lambertian>(checker);
+    
+    checker_mat = make_shared<lambertian>(color{0.882, 0.678, 0});
  
-    loadModel(path);
+    load_model(path);
+  }
+
+  ~model() {
+    delete [] primitives;
   }
 
 private:
@@ -30,11 +40,11 @@ private:
   vector<shared_ptr<image_texture>> textures_loaded;   // stores all the textures loaded so far,
                                                        // optimization to make sure textures aren't loaded more than once.
   string directory;
-  
+
   shared_ptr<material> checker_mat;
-  
+
   // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-  void loadModel(string const &path) {
+  void load_model(string const &path) {
     Assimp::Importer import;
     import.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE, aiPrimitiveType_LINE | aiPrimitiveType_POINT);
     const aiScene* scene = import.ReadFile(path,
@@ -50,28 +60,54 @@ private:
     }
  
     directory = path.substr(0, path.find_last_of('/'));
-    processNode(scene->mRootNode, scene);
+    
+    // allocate the faces array
+    uint primitives_count = calculate_number_of_faces(scene->mRootNode, scene);
+    primitives = new triangle[primitives_count];
+    
+    process_node(scene->mRootNode, scene);
   }
- 
-  void processNode(aiNode *node, const aiScene *scene) {
+  
+  uint calculate_number_of_faces (const aiNode *node, const aiScene* scene) {
+    uint sum = 0;
+    
     // process all node's meshes (if any)
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
       aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-      processMesh(mesh, scene);
+      sum += calculate_number_of_faces(mesh);
     }
     
     // then do the same for each of its children
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-      processNode(node->mChildren[i], scene);
+      sum += calculate_number_of_faces(node->mChildren[i], scene);
+    }
+    
+    return sum;
+  }
+  
+  uint calculate_number_of_faces (const aiMesh* _mesh) {
+    return _mesh->mNumFaces;
+  }
+ 
+  void process_node(aiNode *node, const aiScene *scene) {
+    // process all node's meshes (if any)
+    for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+      aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+      process_mesh(mesh, scene);
+    }
+    
+    // then do the same for each of its children
+    for (unsigned int i = 0; i < node->mNumChildren; i++) {
+      process_node(node->mChildren[i], scene);
     }
   }
  
-  void processMesh(aiMesh* _mesh, const aiScene* scene) {
-    std::clog << "Model has: " << _mesh->mNumVertices << " vertices;" << std::endl;
-    std::clog << "Model has: " << _mesh->mNumFaces << " faces; At most: " << _mesh->mNumFaces * 3 << " vertices;" << std::endl;
-    std::clog << "Model has normals: " << std::boolalpha << _mesh->HasNormals() << std::endl;
+  void process_mesh(aiMesh* _mesh, const aiScene* scene) {
+    std::clog << "Mesh has: " << _mesh->mNumVertices << " vertices;" << std::endl;
+    std::clog << "Mesh has: " << _mesh->mNumFaces << " faces; At most: " << _mesh->mNumFaces * 3 << " vertices;" << std::endl;
+    std::clog << "Mesh has normals: " << std::boolalpha << _mesh->HasNormals() << std::endl;
  
-    vector<shared_ptr<triangle>> triangles;
+    uint primitives_count_old = primitives_count;
     
     // each face is a sigle triangle
     // should have nNumFaces of trinagles in total
@@ -98,16 +134,25 @@ private:
           uvs[j][1] = _mesh->mTextureCoords[0][idx].y;
         }
       }
-      triangles.push_back(make_shared<triangle>(vs[0], vs[1], vs[2], ns[0], ns[1], ns[2], uvs[0], uvs[1], uvs[2]));
+      primitives[primitives_count].v1 = vs[0];
+      primitives[primitives_count].v2 = vs[1];
+      primitives[primitives_count].v3 = vs[2];
+      primitives[primitives_count].n1 = ns[0];
+      primitives[primitives_count].n2 = ns[1];
+      primitives[primitives_count].n3 = ns[2];
+      primitives[primitives_count].uv1 = uvs[0];
+      primitives[primitives_count].uv2 = uvs[1];
+      primitives[primitives_count].uv3 = uvs[2];
+      primitives[primitives_count].update_bounds();
+      primitives_count++;
     }
     // process materials
     aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
     // 1. diffuse material
     auto diffuse_mat = loadMaterial(material, aiTextureType_DIFFUSE, "texture_diffuse");
 
-    for (auto p_triangle = triangles.begin(); p_triangle != triangles.end(); p_triangle++) {
-      (*p_triangle)->mat = diffuse_mat;
-      add(*p_triangle);
+    for (uint primitive_idx = primitives_count_old; primitive_idx < primitives_count; primitive_idx++) {
+      primitives[primitive_idx].mat = diffuse_mat;
     }
   }
  
