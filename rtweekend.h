@@ -71,7 +71,9 @@ inline int ends_with(const char *str, const char *suffix) {
 
 #include "interval.h"
 #include "ray.h"
+#include "vec4.h"
 #include "vec3.h"
 #include "vec2.h"
+#include "mat4.h"
 
 #endif

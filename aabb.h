@@ -53,13 +53,13 @@ public:
     float delta2 = delta / 2.0f;
     vec3f tmp_bmin{bmin}, tmp_bmax{bmax};
     
-    if (abs(bmax.x() - bmin.x()) < delta)
+    if (fabs(bmax.x() - bmin.x()) < delta)
       tmp_bmin[0] -= delta2, tmp_bmax[0] += delta2;
 
-    if (abs(bmax.y() - bmin.y()) < delta)
+    if (fabs(bmax.y() - bmin.y()) < delta)
       tmp_bmin[1] -= delta2, tmp_bmax[1] += delta2;
 
-    if (abs(bmax.z() - bmin.z()) < delta)
+    if (fabs(bmax.z() - bmin.z()) < delta)
       tmp_bmin[2] -= delta2, tmp_bmax[2] += delta2;
 
     return aabb(tmp_bmin, tmp_bmax);
