@@ -8,7 +8,7 @@ class sphere : public hittable {
 public:
 	sphere(point3 _center, double _radius, shared_ptr<material> _material)
     : center{ _center }, radius{ _radius }, mat{_material} {
-      auto rvec = vec3(radius, radius, radius);
+      auto rvec = vec3f(radius, radius, radius);
       bbox = aabb(vec3f{center} - rvec, vec3f{center} + rvec);
     };
 

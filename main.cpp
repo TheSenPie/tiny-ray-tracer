@@ -7,6 +7,7 @@
 #include "sphere.h"
 #include "model.h"
 #include "bvh.h"
+#include "tlas.h"
 
 #include <array>
 
@@ -86,7 +87,33 @@ int main(int argc, char* argv[])
 //  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
 //  std::cout << sizeof(uint) << std::endl;
   model m{modelPath.c_str()};
-  bvh<triangle> b{m.primitives, m.primitives_count};
+  bvh<triangle> mb{m.primitives, m.primitives_count};
+
+  vec3f origin{-39.0f, 42.4f, 0};
+  bvh_instance<triangle> nodes[256];
+  for (int i  = 0; i < 256; i++) {
+    nodes[i] = bvh_instance<triangle>(&mb);
+    nodes[i].set_transform(
+      mat4::Translate(origin + vec3f{ (i%16) * 17.f * 0.3f, (i/16) * -17.f * 0.3f, 0  })
+      * mat4::RotateY(i * pi/256)
+      * mat4::Scale(0.3f)
+    );
+  }
+//  nodes[1] = bvh_instance<triangle>(&mb);
+//  nodes[2] = bvh_instance<triangle>(&mb);
+//  nodes[3] = bvh_instance<triangle>(&mb);
+// 
+//  nodes[1].set_transform(mat4::Translate(20, 0, 0));
+//  nodes[2].set_transform(mat4::Translate(0, 20, 0));
+//  nodes[3].set_transform(mat4::Translate(20, 20, 0));
+  
+  shared_ptr<tlas<triangle>> models{make_shared<tlas<triangle>>(nodes, 256)};
+  models->build();
+  
+  world.add(models);
+  
+//  world.add(make_shared<bvh<triangle>>(m.primitives, m.primitives_count));
+  
 //  world.add(make_shared<bvh<triangle>>(m.primitives, m.primitives_count));
 //  shared_ptr<hittable> model_bvh = make_shared<bvh_node>(m);
 //  model_bvh = make_shared<rotate_y>(model_bvh, 90);
@@ -100,25 +127,25 @@ int main(int argc, char* argv[])
   camera cam;
  
 //  cam.aspect_ratio      = 16.0 / 9.0;
-//  cam.aspect_ratio      = 1.0;
+  cam.aspect_ratio      = 1.0;
 //  cam.image_width       = 1200; // prod
 //  cam.samples_per_pixel = 500; // prod
-  cam.image_width = 1000;
+  cam.image_width = 2000;
   cam.samples_per_pixel = 10;
   cam.max_depth         = 50;
 
   cam.vfov     = 20;
-  cam.lookfrom = point3(5, 7, 50.0);
+  cam.lookfrom = point3(5, 7, 237.0);
   cam.lookat   = point3(0, 7,0);
   cam.vup      = vec3(0,1,0);
   cam.defocus_angle = 0.6;
-  cam.focus_dist    = 50.0;
+  cam.focus_dist    = 237.0;
  
   if (argc == 2 && ends_with(argv[1], ".png")) {
     cam.out_path = argv[1];
   }
 
-  cam.render(b);
+  cam.render(world);
   
 }
 
@@ -194,6 +221,16 @@ int main(int argc, char* argv[])
 //BVH construction time: 9095.76ms
 //Amount of prmiitives: 0
 //Render time: 161595ms
+
+// two robots
+//➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - robots.png"
+//Mesh has: 10860 vertices;
+//Mesh has: 8850 faces; At most: 26550 vertices;
+//Mesh has normals: true
+//Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/Texture_1K.jpg
+//BVH construction time: 448.981ms
+//BVH construction time: 448.272ms
+//Render time: 9760.75ms
 
 // BVH bild time comparison
 //➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - test.png"

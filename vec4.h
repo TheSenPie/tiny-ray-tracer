@@ -6,6 +6,8 @@
 
 using std::sqrt;
 
+class vec3f;
+
 /* float version */
 class vec4f {
 public:
@@ -13,7 +15,7 @@ public:
 
   vec4f() : e{ 0.0f, 0.0f, 0.0f, 0.0f } {}
   vec4f(float e0, float e1, float e2, float e3) : e{e0, e1, e2, e3} {}
-//  vec4f(const vec4& other) : e{(float) other.x(), (float) other.y(), (float) other.z(), (float) other.w()} {} // double version
+  vec4f(const vec3f& other, float a);
 
   float x() const { return e[0]; }
   float y() const { return e[1]; }

@@ -64,6 +64,8 @@ public:
 
     return aabb(tmp_bmin, tmp_bmax);
   }
+  
+  void grow( vec3f p ) { bmin = fminf( bmin, p ); bmax = fmaxf( bmax, p ); }
 };
 
 aabb operator+(const aabb& bbox, const vec3f& offset) {

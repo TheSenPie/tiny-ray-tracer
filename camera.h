@@ -71,7 +71,7 @@ public:
         }
       }
     } else { // Write to png.
-      unsigned char data[3 * image_width * image_height];
+      unsigned char* data = (unsigned char*) malloc(sizeof(unsigned char) * 3 * image_width * image_height);
       int idx = 0;
       for (int j = 0; j < image_height; j++) {
         for (int i = 0; i < image_width; i++) {
@@ -83,6 +83,7 @@ public:
         }
       }
       stbi_write_png(out_path, image_width, image_height, 3, data, 3 * image_width);
+      free(data);
     }
     
   }

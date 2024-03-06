@@ -191,16 +191,68 @@ public:
 	}
 };
 
-mat4 operator * ( const mat4& a, const mat4& b );
-mat4 operator + ( const mat4& a, const mat4& b );
-mat4 operator * ( const mat4& a, const float s );
-mat4 operator * ( const float s, const mat4& a );
-bool operator == ( const mat4& a, const mat4& b );
-bool operator != ( const mat4& a, const mat4& b );
-vec4f operator * ( const mat4& a, const vec4f& b );
-vec4f operator * ( const vec4f& a, const mat4& b );
+mat4 operator*( const mat4& a, const mat4& b )
+{
+	mat4 r;
+	for (uint i = 0; i < 16; i += 4)
+		for (uint j = 0; j < 4; ++j)
+		{
+			r[i + j] =
+				(a.cell[i + 0] * b.cell[j + 0]) +
+				(a.cell[i + 1] * b.cell[j + 4]) +
+				(a.cell[i + 2] * b.cell[j + 8]) +
+				(a.cell[i + 3] * b.cell[j + 12]);
+		}
+	return r;
+}
+mat4 operator+( const mat4& a, const mat4& b )
+{
+	mat4 r;
+	for (uint i = 0; i < 16; i += 4) r.cell[i] = a.cell[i] + b.cell[i];
+	return r;
+}
+mat4 operator*( const mat4& a, const float s )
+{
+	mat4 r;
+	for (uint i = 0; i < 16; i += 4) r.cell[i] = a.cell[i] * s;
+	return r;
+}
+mat4 operator*( const float s, const mat4& a )
+{
+	mat4 r;
+	for (uint i = 0; i < 16; i++) r.cell[i] = a.cell[i] * s;
+	return r;
+}
+bool operator==( const mat4& a, const mat4& b )
+{
+	for (uint i = 0; i < 16; i++)
+		if (a.cell[i] != b.cell[i]) return false;
+	return true;
+}
+bool operator!=( const mat4& a, const mat4& b ) { return !(a == b); }
+vec4f operator*( const mat4& a, const vec4f& b )
+{
+	return vec4f( a.cell[0] * b.x() + a.cell[1] * b.y() + a.cell[2] * b.z() + a.cell[3] * b.w(),
+		a.cell[4] * b.x() + a.cell[5] * b.y() + a.cell[6] * b.z() + a.cell[7] * b.w(),
+		a.cell[8] * b.x() + a.cell[9] * b.y() + a.cell[10] * b.z() + a.cell[11] * b.w(),
+		a.cell[12] * b.x() + a.cell[13] * b.y() + a.cell[14] * b.z() + a.cell[15] * b.w() );
+}
+vec4f operator*( const vec4f& b, const mat4& a )
+{
+	return vec4f( a.cell[0] * b.x() + a.cell[1] * b.y() + a.cell[2] * b.z() + a.cell[3] * b.w(),
+		a.cell[4] * b.x() + a.cell[5] * b.y() + a.cell[6] * b.z() + a.cell[7] * b.w(),
+		a.cell[8] * b.x() + a.cell[9] * b.y() + a.cell[10] * b.z() + a.cell[11] * b.w(),
+		a.cell[12] * b.x() + a.cell[13] * b.y() + a.cell[14] * b.z() + a.cell[15] * b.w() );
+}
 
-vec3f TransformPosition( const vec3f& a, const mat4& M );
-vec3f TransformVector( const vec3f& a, const mat4& M );
+vec3f TransformPosition( const vec3f& a, const mat4& M )
+{
+	return vec3f(vec4f( a, 1 ) * M);
+}
+
+vec3f TransformVector( const vec3f& a, const mat4& M )
+{
+	return vec3f( vec4f( a, 0 ) * M );
+}
 
 #endif

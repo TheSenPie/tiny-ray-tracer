@@ -71,8 +71,12 @@ inline int ends_with(const char *str, const char *suffix) {
 
 #include "interval.h"
 #include "ray.h"
+
 #include "vec4.h"
 #include "vec3.h"
+vec4f::vec4f(const vec3f& other, float a) : e{other.x(), other.y(), other.z(), a} {}
+vec3f::vec3f(const vec4f& other) : e{other.x(), other.y(), other.z()} {}
+
 #include "vec2.h"
 #include "mat4.h"
 

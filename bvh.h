@@ -15,7 +15,7 @@ struct bin { aabb bounds; int primitives_count = 0; };
 
 struct bvh_node // in total 32 bytes
 {
-  aabb bbox;
+  aabb bbox; // 24
   uint left_first; // 4
   uint primitives_count; // 4
 	bool is_leaf() const { return primitives_count > 0; }
@@ -38,10 +38,36 @@ public:
     primitives_idx = new uint[N];
     build();
   }
+
+  bvh(bvh&& a)
+    : inv_transform{a.inv_transform},
+      bounds{a.bounds},
+      bvh_nodes{a.bvh_nodes},
+      primitives{a.primitives},
+      primitives_idx(a.primitives_idx),
+      nodes_used{a.nodes_used}, primitives_count{a.primitives_count},
+      center{a.center} {
+        bvh_nodes = nullptr;
+        primitives_idx = nullptr;
+        primitives = nullptr;
+        nodes_used = 0;
+        primitives_count = 0;
+  }
+  
+  bvh<T>& operator=(bvh&& a) {
+    std::swap(bvh_nodes, a.bvh_nodes);
+    std::swap(primitives_idx, a.primitives_idx);
+    std::swap(primitives, a.primitives);
+    return *this;
+  }
  
   ~bvh() {
-    free(bvh_nodes);
+    if (bvh_nodes != nullptr) {
+      free(bvh_nodes);
+      bvh_nodes = nullptr;
+    }
     delete[] primitives_idx;
+    primitives_idx = nullptr;
     nodes_used = 0;
   }
  
@@ -55,21 +81,42 @@ public:
     // assign all triangles to root node
     bvh_node& root = bvh_nodes[0];
     root.left_first = 0, root.primitives_count = primitives_count;
-    update_node_bounds(0);
-    // subdivide recursively
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;
     using std::chrono::duration;
     using std::chrono::milliseconds;
     auto t1 = high_resolution_clock::now(); // measure render time
+    update_node_bounds(0);
+    // subdivide recursively
     subdivide(0);
     auto t2 = high_resolution_clock::now();
     /* Getting number of milliseconds as a double. */
     duration<double, std::milli> ms_double = t2 - t1;
     std::clog << "BVH construction time: " << ms_double.count() << "ms" << std::endl;
+
+    bounds = aabb(bvh_nodes[0].bbox.bmin, bvh_nodes[0].bbox.bmax);
+    center = (bounds.bmax + bounds.bmin) / 2.0f;
   }
-//  void refit() { /* ... */ }
-//  void set_transform(mat4& transform) { /* ... */ }
+  
+  void refit() {
+    for (int i = nodes_used - 1; i >= 0; i--) if (i != 1)
+    {
+      bvh_node& node = bvh_nodes[i];
+      if (node.is_leaf()) {
+        // leaf node: adjust bounds to contained triangles
+        update_node_bounds(i);
+        continue;
+      }
+      // interior node: adjust bounds to child node bounds
+      bvh_node& left_child = bvh_nodes[node.left_first];
+      bvh_node& right_child = bvh_nodes[node.left_first + 1];
+      node.bbox.bmin = fminf( left_child.bbox.bmin, right_child.bbox.bmin );
+      node.bbox.bmax = fmaxf( left_child.bbox.bmax, right_child.bbox.bmax );
+    }
+  }
+  
+
+
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override
   {
     const bvh_node *node = &bvh_nodes[0], *stack[64];
@@ -121,16 +168,21 @@ public:
     return hit_anything;
   }
 
-  aabb bounding_box() const override {
-    if (nodes_used > 0) {
-      bvh_node& node = bvh_nodes[0];
-      return aabb();
-    }
-  }
+  aabb bounding_box() const override { return bounds; }
     
   point3f centroid() const override { return center; }
  
 private:
+  mat4 inv_transform; // inverse transform
+  aabb bounds; // in world space
+  
+  bvh_node* bvh_nodes = nullptr;
+  T* primitives = nullptr;
+  uint* primitives_idx = nullptr;
+  uint nodes_used, primitives_count;
+  point3f center;
+
+ 
   void subdivide(uint node_idx) {
     // terminate recursion
     bvh_node& node = bvh_nodes[node_idx];
@@ -180,7 +232,6 @@ private:
       node.bbox.bmin = fminf( node.bbox.bmin, leaf_prim.bounding_box().bmin );
       node.bbox.bmax = fmaxf( node.bbox.bmax, leaf_prim.bounding_box().bmax );
     }
-    center = (bbox.bmax + bbox.bmin) / 2.0f;
   }
 
   double find_best_split_plane(bvh_node& node, int& axis, double& split_pos) {
@@ -228,13 +279,57 @@ private:
     }
     return best_cost;
   }
+};
 
-  bvh_node* bvh_nodes = nullptr;
-  T* primitives = nullptr;
-  uint* primitives_idx = nullptr;
-  uint nodes_used, primitives_count;
-  aabb bbox;
-  point3f center;
+// instance of a BVH, with transform and world bounds
+template<typename T>
+class bvh_instance : public hittable
+{
+public:
+  bvh_instance() = default;
+  bvh_instance(bvh<T>* blas) : bvh(blas) { set_transform( mat4() ); }
+  ~bvh_instance() {
+    bvh = nullptr;
+  }
+
+   void set_transform(const mat4& transform)
+  {
+    inv_transform = transform.Inverted();
+    // calculate world-space bounds using the new matrix
+    vec3f bmin = bvh->bounding_box().bmin, bmax = bvh->bounding_box().bmax;
+    bounds = aabb();
+    for (int i = 0; i < 8; i++) {
+      bounds.grow(TransformPosition( vec3f( i & 1 ? bmax.x() : bmin.x(),
+            i & 2 ? bmax.y() : bmin.y(), i & 4 ? bmax.z() : bmin.z() ), transform ));
+    }
+    center = (bounds.bmax + bounds.bmin) / 2.0f;
+  }
+
+  bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
+    hit_record temp_rec;
+
+    // copy original ray, modify and pass
+    auto origin = TransformPosition( r.origin(), inv_transform );
+    auto direction = TransformVector( r.direction(), inv_transform );
+    ray rotated_r(origin, direction);
+    
+    if (bvh->hit(rotated_r, ray_t, temp_rec)) {
+      rec = temp_rec;
+      return true;
+    }
+
+    return false;
+  }
+
+  aabb bounding_box() const override { return bounds; }
+  
+  point3f centroid() const override { return center; }
+  
+private:
+  bvh<T>* bvh = nullptr;
+  mat4 inv_transform; // inverse transform
+  aabb bounds; // in world space
+  point3f center; // in world space
 };
 
 #endif

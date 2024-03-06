@@ -1,6 +1,8 @@
 #ifndef VEC3_h
 #define VEC3_h
 
+#include "vec4.h"
+
 #include <cmath>
 #include <iostream>
 
@@ -12,6 +14,7 @@ public:
 
 	vec3() : e{ 0, 0, 0 } {}
 	vec3(double e0, double e1, double e2) : e{e0, e1, e2} {}
+  vec3(const vec3f& other);
 
 	double x() const { return e[0]; }
 	double y() const { return e[1]; }
@@ -160,6 +163,8 @@ public:
   vec3f() : e{ 0.0f, 0.0f, 0.0f } {}
   vec3f(float e0, float e1, float e2) : e{e0, e1, e2} {}
   vec3f(const vec3& other) : e{(float) other.x(), (float) other.y(), (float) other.z()} {}
+  
+  vec3f(const vec4f& other);
 
   float x() const { return e[0]; }
   float y() const { return e[1]; }
@@ -252,5 +257,7 @@ inline vec3f unit_vector(vec3f v) {
 
 inline vec3f fminf( const vec3f& a, const vec3f& b ) { return vec3f{ fminf( a.x(), b.x() ), fminf( a.y(), b.y() ), fminf( a.z(), b.z() ) }; }
 inline vec3f fmaxf( const vec3f& a, const vec3f& b ) { return vec3f{ fmax( a.x(), b.x() ), fmax( a.y(), b.y() ), fmax( a.z(), b.z() ) }; }
+
+vec3::vec3(const vec3f& other) : e{ other.x(), other.y(), other.z() } {}
 
 #endif
