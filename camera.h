@@ -91,13 +91,18 @@ public:
   std::vector<color> compute(const hittable& world) {
     std::vector<color> buffer(image_width * image_height);
     
-    for (int j = 0; j < image_height; j++) {
-      for (int i = 0; i < image_width; i++) {
+    for (int tile = 0; tile < image_width * image_height / 64; tile++) {
+      for (int v = 0; v < 8; v++) for (int u = 0; u < 8; u++) {
+        int x = tile % (image_width / 8), y = tile / (image_width / 8);
         color pixel_color{0, 0, 0};
-        ray r = get_ray(i,j);
+        
+        int a = x * 8 + u;
+        int b = y * 8 + v;
+        
+        ray r = get_ray(a, b);
         pixel_color += ray_color(r, max_depth, world);
  
-        buffer[i * image_height + j] = pixel_color;
+        buffer[a * image_height + b] = pixel_color;
       }
     }
  

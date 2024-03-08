@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     nodes[i] = bvh_instance<triangle>(&mb);
     nodes[i].set_transform(
       mat4::Translate(origin + vec3f{ (i%16) * 17.f * 0.3f, (i/16) * -17.f * 0.3f, 0  })
-      * mat4::RotateY(i * pi/256)
+      * mat4::RotateY(i * (pi/256))
       * mat4::Scale(0.3f)
     );
   }
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
   cam.aspect_ratio      = 1.0;
 //  cam.image_width       = 1200; // prod
 //  cam.samples_per_pixel = 500; // prod
-  cam.image_width = 2000;
+  cam.image_width = 1920; // multiple of 64
   cam.samples_per_pixel = 10;
   cam.max_depth         = 50;
 
