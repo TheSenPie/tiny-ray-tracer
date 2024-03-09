@@ -254,6 +254,71 @@ void robot(const char* out_path, bool render_many) {
   delete[] nodes;
 }
 
+void eva(const char* out_path, bool render_many) {
+  hittable_list world;
+  
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/eva/eva.obj";
+ 
+  model m{modelPath.c_str()};
+  bvh<triangle> mb{m.primitives, m.primitives_count};
+  bvh_instance<triangle>* nodes = nullptr;
+
+//  if (render_many) {
+//    nodes = new bvh_instance<triangle>[256];
+//    
+//    vec3f origin{-39.0f, 42.4f, 0};
+//    for (int i  = 0; i < 256; i++) {
+//      nodes[i] = bvh_instance<triangle>(&mb);
+//      nodes[i].set_transform(
+//        mat4::Translate(origin + vec3f{ (i%16) * 17.f * 0.3f, (i/16) * -17.f * 0.3f, 0  })
+//        * mat4::RotateY(i * (pi/256))
+//        * mat4::Scale(0.3f)
+//      );
+//    }
+//    
+//    shared_ptr<tlas<triangle>> models{make_shared<tlas<triangle>>(nodes, 256)};
+//    models->build();
+//
+//    world.add(models);
+//  } else {
+     world.add(make_shared<bvh_instance<triangle>>(&mb));
+//  }
+  
+  camera cam;
+
+  cam.aspect_ratio      = 1.0;
+  if (render_many) {
+    cam.image_width = 1920;
+  } else {
+    cam.image_width       = 640;
+  }
+  cam.samples_per_pixel = 50;
+  cam.max_depth         = 50;
+  cam.background        = color(0.5, 0.7, 1.0);
+
+  cam.vfov     = 20;
+  if (render_many) {
+    cam.lookfrom = point3(5, 7, 237.0);
+    cam.lookat   = point3(0, 7,0);
+    cam.focus_dist    = 237.0;
+  } else {
+    cam.lookfrom = point3(26, 7,50);
+    cam.lookat = point3(-2, 7, 0);
+    cam.focus_dist = 50;
+  }
+  cam.vup      = vec3(0,1,0);
+
+  cam.defocus_angle = 0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
+  }
+
+  cam.render(world);
+  
+  delete[] nodes;
+}
+
 //void cubes(const char* out_path) {
 //  hittable_list world;
 //  
@@ -321,8 +386,17 @@ void robot(const char* out_path, bool render_many) {
 void any_model(const char* out_path, const char* model_path) {
   hittable_list world;
   
-//  model m{modelPath.c_str()};
-//  bvh<triangle> mb{m.primitives, m.primitives_count};
+  model m{model_path};
+  bvh<triangle> mb{m.primitives, m.primitives_count};
+  auto instance = make_shared<bvh_instance<triangle>>(&mb);
+  instance->set_transform(mat4::Translate(0.f, 1.f, 0.f) * mat4::RotateY(degrees_to_radians(-90)));
+  world.add(instance);
+  
+  sphere* spheres = new sphere[1 + 24*24 + 3];
+  int sphere_count = 0;
+  
+  auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
  
   camera cam;
 
@@ -357,7 +431,7 @@ int main(int argc, char* argv[]) {
     model_path = argv[2];
   }
   
-  switch (2) {
+  switch (6) {
     case 0:  simple_light(out_path);                break;
     case 1:  dragon(out_path, false);               break;
     case 2:  cow(out_path);                         break;
@@ -365,6 +439,7 @@ int main(int argc, char* argv[]) {
 //    case 4:  cubes(out_path);                       break;
 //    case 5:  smiley(out_path);                      break;
     case 6:  any_model(out_path, model_path);       break;
+    case 7:  eva(out_path, false);                  break;
     default: final_scene(out_path, 1920,   250,  4); break;
   }
 }

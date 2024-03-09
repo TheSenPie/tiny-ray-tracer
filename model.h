@@ -150,20 +150,35 @@ private:
       primitives[primitives_count].update_bounds();
       primitives_count++;
     }
+    
+    shared_ptr<material> final_mat;
     // process materials
     aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
+ 
     // 1. diffuse material
-    auto diffuse_mat = loadMaterial(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    final_mat = loadMaterial(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    if (!final_mat) {
+      // 2. emmisive material
+      aiColor4D emission;
+      if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_EMISSIVE, &emission) && !emission.IsBlack()) {
+        color c{emission.r, emission.g, emission.b};
+        auto difflight = make_shared<diffuse_light>(c);
+        final_mat = difflight;
+      } else {
+        // 3. default material
+        final_mat = default_mat;
+      }
+    }
 
     for (uint primitive_idx = primitives_count_old; primitive_idx < primitives_count; primitive_idx++) {
-      primitives[primitive_idx].mat = diffuse_mat;
+      primitives[primitive_idx].mat = final_mat;
     }
   }
  
   shared_ptr<material> loadMaterial(aiMaterial *mat, aiTextureType type, string typeName) {
     // todo: handle the case of multiple textures for a single material
     if (mat->GetTextureCount(type) == 0) {
-      return default_mat;
+      return nullptr;
     }
     for (int i = 0; i < mat->GetTextureCount(type); i++) {
       aiString str;
