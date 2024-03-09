@@ -6,11 +6,16 @@
 
 class sphere : public hittable {
 public:
+  sphere() = default;
 	sphere(point3 _center, double _radius, shared_ptr<material> _material)
     : center{ _center }, radius{ _radius }, mat{_material} {
+      update_bounds();
+    };
+    
+  void update_bounds () {
       auto rvec = vec3f(radius, radius, radius);
       bbox = aabb(vec3f{center} - rvec, vec3f{center} + rvec);
-    };
+  }
 
 	bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
 		vec3 oc = r.origin() - center;

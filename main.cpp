@@ -11,142 +11,362 @@
 
 #include <array>
 
-int main(int argc, char* argv[])
-{
+void final_scene(const char* out_path, int image_width, int samples_per_pixel, int max_depth) {
   hittable_list world;
 
-  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
-
-//  auto ground_material = make_shared<lambertian>(checker);
-
-//  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
- 
-//  for (int a = -111; a < 111; a++) {
-//    for (int b = -11; b < 11; b++) {
-//      auto choose_mat = random_double();
-//      point3 center{a + 0.9*random_double(), 0.2, b + 0.9*random_double()};
-//      
-//      if ((center - point3{4, 0.2, 0}).length() > 0.9) {
-//        shared_ptr<material> sphere_material;
-//        
-//        if (choose_mat < 0.8) {
-//          // diffuse
-//          auto albedo = color::random() * color::random();
-//          sphere_material = make_shared<lambertian>(albedo);
-//          world.add(make_shared<sphere>(center, 0.2, sphere_material));
-//        } else if (choose_mat < 0.95) {
-//            // metal
-//            auto albedo = color::random(0.5, 1);
-//            auto fuzz = random_double(0, 0.5);
-//            sphere_material = make_shared<metal>(albedo, fuzz);
-//            world.add(make_shared<sphere>(center, 0.2, sphere_material));
-//        } else {
-//          // glass
-//          sphere_material = make_shared<dielectric>(1.5);
-//          world.add(make_shared<sphere>(center, 0.2, sphere_material));
-//        }
-//      }
-//    }
-//  }
- 
-//  auto material1 = make_shared<dielectric>(1.5);
-//  world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
-
-//  auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1)); // red
-//  world.add(make_shared<sphere>(point3(-1, 1, 2), 1.0, material2));
-//  
-//  auto material2_5 = make_shared<lambertian>(color(0.2, 0.4, 0.6)); // blue
-//  world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material2_5));
+  sphere* spheres = new sphere[1 + 24*24 + 3];
+  int sphere_count = 0;
   
-  // the one that is further away, cuts off the one closer
-
-  //auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-//  world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
-
-//  std::vector<double> verticies{
-//    1.0, 0.0, -1.0,   0.0, 0.0, 1.0,  1.0, 1.0,
-//    0.0, 1.0, -1.0,   0.0, 0.0, 1.0,  0.5, 0.0,
-//    -1.0, 0.0, -1.0,  0.0, 0.0, 1.0,  0.0, 1.0
-//  };
-//  
-//  std::vector<int> indicies{0, 1, 2};
-//  world.add(make_shared<mesh>(verticies, indicies, ground_material));
+  auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+  spheres[sphere_count++] = sphere{point3(0,-1000,0), 1000, ground_material};
   
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/backpack/backpack.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cow/cow.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/box/wooden-box.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon-high-res.obj";
-  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wheelDefault.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
-//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
-//  std::cout << sizeof(uint) << std::endl;
-  model m{modelPath.c_str()};
-  bvh<triangle> mb{m.primitives, m.primitives_count};
+  for (int a = -11; a < 11; a++) {
+    for (int b = -11; b < 11; b++) {
+      auto choose_mat = random_double();
+      point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
 
-  vec3f origin{-39.0f, 42.4f, 0};
-  bvh_instance<triangle> nodes[256];
-  for (int i  = 0; i < 256; i++) {
-    nodes[i] = bvh_instance<triangle>(&mb);
-    nodes[i].set_transform(
-      mat4::Translate(origin + vec3f{ (i%16) * 17.f * 0.3f, (i/16) * -17.f * 0.3f, 0  })
-      * mat4::RotateY(i * (pi/256))
-      * mat4::Scale(0.3f)
-    );
+      if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+        shared_ptr<material> sphere_material;
+ 
+        if (choose_mat < 0.8) {
+            // diffuse
+            auto albedo = color::random() * color::random();
+            sphere_material = make_shared<lambertian>(albedo);
+            spheres[sphere_count++] = sphere{center, 0.2, sphere_material};
+        } else if (choose_mat < 0.95) {
+            // metal
+            auto albedo = color::random(0.5, 1);
+            auto fuzz = random_double(0, 0.5);
+            sphere_material = make_shared<metal>(albedo, fuzz);
+            spheres[sphere_count++] = sphere{center, 0.2, sphere_material};
+        } else {
+          // glass
+          sphere_material = make_shared<dielectric>(1.5);
+          spheres[sphere_count++] = sphere{center, 0.2, sphere_material};
+        }
+      }
+    }
   }
-//  nodes[1] = bvh_instance<triangle>(&mb);
-//  nodes[2] = bvh_instance<triangle>(&mb);
-//  nodes[3] = bvh_instance<triangle>(&mb);
-// 
-//  nodes[1].set_transform(mat4::Translate(20, 0, 0));
-//  nodes[2].set_transform(mat4::Translate(0, 20, 0));
-//  nodes[3].set_transform(mat4::Translate(20, 20, 0));
+
+  auto material1 = make_shared<dielectric>(1.5);
+  spheres[sphere_count++] = sphere{point3(0, 1, 0), 1.0, material1};
+
+  auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
+  spheres[sphere_count++] = sphere{point3(-4, 1, 0), 1.0, material2};
+
+  auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+  spheres[sphere_count++] = sphere{point3(4, 1, 0), 1.0, material3};
   
-  shared_ptr<tlas<triangle>> models{make_shared<tlas<triangle>>(nodes, 256)};
-  models->build();
-  
-  world.add(models);
-  
-//  world.add(make_shared<bvh<triangle>>(m.primitives, m.primitives_count));
-  
-//  world.add(make_shared<bvh<triangle>>(m.primitives, m.primitives_count));
-//  shared_ptr<hittable> model_bvh = make_shared<bvh_node>(m);
-//  model_bvh = make_shared<rotate_y>(model_bvh, 90);
-//  model_bvh = make_shared<translate>(model_bvh, vec3{-2, -7.5, 0});
-//  world.add(model_bvh);
-//
-//  world = hittable_list(make_shared<bvh_node>(world));
-  
-  std::clog << "Amount of prmiitives: " << world.objects.size() << std::endl;
-  
+  world.add(make_shared<bvh<sphere>>(spheres, sphere_count));
+  std::cout << "Rendering " << sphere_count << " spheres" << std::endl;
+
   camera cam;
- 
-//  cam.aspect_ratio      = 16.0 / 9.0;
-  cam.aspect_ratio      = 1.0;
-//  cam.image_width       = 1200; // prod
-//  cam.samples_per_pixel = 500; // prod
-  cam.image_width = 1920; // multiple of 64
-  cam.samples_per_pixel = 10;
+
+  cam.aspect_ratio      = 16.0 / 9.0;
+  cam.image_width       = 1920;
+  cam.samples_per_pixel = 200;
   cam.max_depth         = 50;
+  cam.background        = color(0.5, 0.7, 1.0);
 
   cam.vfov     = 20;
-  cam.lookfrom = point3(5, 7, 237.0);
-  cam.lookat   = point3(0, 7,0);
+  cam.lookfrom = point3(13,2,3);
+  cam.lookat   = point3(0,0,0);
   cam.vup      = vec3(0,1,0);
+
   cam.defocus_angle = 0.6;
-  cam.focus_dist    = 237.0;
- 
-  if (argc == 2 && ends_with(argv[1], ".png")) {
-    cam.out_path = argv[1];
+  cam.focus_dist    = 10.0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
   }
 
   cam.render(world);
   
+  delete[] spheres;
+}
+
+void simple_light(const char* out_path) {
+  hittable_list world;
+
+  auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
+  world.add(make_shared<sphere>(point3(0,-1000,0), 1000, make_shared<lambertian>(checker)));
+  world.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(checker)));
+
+  auto difflight = make_shared<diffuse_light>(color(4,4,4));
+  world.add(make_shared<sphere>(point3(0,7,0), 2, difflight));
+
+  camera cam;
+
+  cam.aspect_ratio      = 16.0 / 9.0;
+  cam.image_width       = 640;
+  cam.samples_per_pixel = 100;
+  cam.max_depth         = 50;
+  cam.background        = color(0,0,0);
+
+  cam.vfov     = 20;
+  cam.lookfrom = point3(26,3,6);
+  cam.lookat   = point3(0,2,0);
+  cam.vup      = vec3(0,1,0);
+
+  cam.defocus_angle = 0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
+  }
+
+  cam.render(world);
+}
+
+void dragon(const char* out_path, bool high_res) {
+  hittable_list world;
+  
+  string model_path;
+  if (high_res)
+    model_path = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon-high-res.obj";
+  else
+    model_path  = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/dragon.obj";
+    
+  auto model_material = make_shared<lambertian>(color{0.882, 0.678, 0.003});
+  model m{model_path.c_str(), model_material};
+  bvh<triangle> mb{m.primitives, m.primitives_count};
+  auto instance = make_shared<bvh_instance<triangle>>(&mb);
+  instance->set_transform(mat4::RotateY(degrees_to_radians(-25)));
+  
+  world.add(instance);
+ 
+  camera cam;
+
+  cam.aspect_ratio      = 16.0 / 9.0;
+  cam.image_width       = 1920;
+  cam.samples_per_pixel = 100;
+  cam.max_depth         = 50;
+  cam.background        = color(0.5, 0.7, 1.0);
+
+  cam.vfov     = 20;
+  cam.lookfrom = point3(5,0,15);
+  cam.lookat   = point3(0.5,0.5,0);
+  cam.vup      = vec3(0,1,0);
+
+  cam.defocus_angle = 0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
+  }
+
+  cam.render(world);
+}
+
+void cow(const char* out_path) {
+  hittable_list world;
+  
+  string model_path = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cow/cow.obj";
+  model m{model_path.c_str()};
+  bvh<triangle> mb{m.primitives, m.primitives_count};
+  auto instance = make_shared<bvh_instance<triangle>>(&mb);
+  instance->set_transform(mat4::RotateY(degrees_to_radians(-90)));
+  
+  world.add(instance);
+
+  camera cam;
+
+  cam.aspect_ratio      = 1;
+  cam.image_width       = 1280;
+  cam.samples_per_pixel = 100;
+  cam.max_depth         = 50;
+  cam.background        = color(0.5, 0.7, 1.0);
+
+  cam.vfov     = 20;
+  cam.lookfrom = point3(3,3,6);
+  cam.lookat   = point3(0,0,0);
+  cam.vup      = vec3(0,1,0);
+
+  cam.defocus_angle = 0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
+  }
+
+  cam.render(world);
+}
+
+void robot(const char* out_path, bool render_many) {
+  hittable_list world;
+  
+  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo.obj";
+ 
+  model m{modelPath.c_str()};
+  bvh<triangle> mb{m.primitives, m.primitives_count};
+  bvh_instance<triangle>* nodes = nullptr;
+
+  if (render_many) {
+    nodes = new bvh_instance<triangle>[256];
+    
+    vec3f origin{-39.0f, 42.4f, 0};
+    for (int i  = 0; i < 256; i++) {
+      nodes[i] = bvh_instance<triangle>(&mb);
+      nodes[i].set_transform(
+        mat4::Translate(origin + vec3f{ (i%16) * 17.f * 0.3f, (i/16) * -17.f * 0.3f, 0  })
+        * mat4::RotateY(i * (pi/256))
+        * mat4::Scale(0.3f)
+      );
+    }
+    
+    shared_ptr<tlas<triangle>> models{make_shared<tlas<triangle>>(nodes, 256)};
+    models->build();
+
+    world.add(models);
+  } else {
+     world.add(make_shared<bvh_instance<triangle>>(&mb));
+  }
+  
+  camera cam;
+
+  cam.aspect_ratio      = 1.0;
+  if (render_many) {
+    cam.image_width = 1920;
+  } else {
+    cam.image_width       = 640;
+  }
+  cam.samples_per_pixel = 50;
+  cam.max_depth         = 50;
+  cam.background        = color(0.5, 0.7, 1.0);
+
+  cam.vfov     = 20;
+  if (render_many) {
+    cam.lookfrom = point3(5, 7, 237.0);
+    cam.lookat   = point3(0, 7,0);
+    cam.focus_dist    = 237.0;
+  } else {
+    cam.lookfrom = point3(26, 7,50);
+    cam.lookat = point3(-2, 7, 0);
+    cam.focus_dist = 50;
+  }
+  cam.vup      = vec3(0,1,0);
+
+  cam.defocus_angle = 0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
+  }
+
+  cam.render(world);
+  
+  delete[] nodes;
+}
+
+//void cubes(const char* out_path) {
+//  hittable_list world;
+//  
+//  string cube = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cube.obj";
+//  string wooden_box = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/wood-box/wooden-box.obj";
+//  string other_wooden_box = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/box/wooden-box.obj";
+//  string crate = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/crate/crate.obj";
+//
+//  string weird_cube = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/weird-cube/weird-cube.obj";
+//
+//
+////  model m{modelPath.c_str()};
+////  bvh<triangle> mb{m.primitives, m.primitives_count};
+//  camera cam;
+//
+//  cam.aspect_ratio      = 16.0 / 9.0;
+//  cam.image_width       = 400;
+//  cam.samples_per_pixel = 100;
+//  cam.max_depth         = 50;
+//  cam.background        = color(0,0,0);
+//
+//  cam.vfov     = 20;
+//  cam.lookfrom = point3(26,3,6);
+//  cam.lookat   = point3(0,2,0);
+//  cam.vup      = vec3(0,1,0);
+//
+//  cam.defocus_angle = 0;
+//  
+//  if (out_path) {
+//    cam.out_path = out_path;
+//  }
+//
+//  cam.render(world);
+//}
+
+//void smiley(const char* out_path) {
+//  hittable_list world;
+//  
+//  string modelPath = "/Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/smiley/smiley.obj";
+//
+////  model m{modelPath.c_str()};
+////  bvh<triangle> mb{m.primitives, m.primitives_count};
+//  camera cam;
+//
+//  cam.aspect_ratio      = 16.0 / 9.0;
+//  cam.image_width       = 400;
+//  cam.samples_per_pixel = 100;
+//  cam.max_depth         = 50;
+//  cam.background        = color(0,0,0);
+//
+//  cam.vfov     = 20;
+//  cam.lookfrom = point3(26,3,6);
+//  cam.lookat   = point3(0,2,0);
+//  cam.vup      = vec3(0,1,0);
+//
+//  cam.defocus_angle = 0;
+//  
+//  if (out_path) {
+//    cam.out_path = out_path;
+//  }
+//
+//  cam.render(world);
+//}
+
+void any_model(const char* out_path, const char* model_path) {
+  hittable_list world;
+  
+//  model m{modelPath.c_str()};
+//  bvh<triangle> mb{m.primitives, m.primitives_count};
+ 
+  camera cam;
+
+  cam.aspect_ratio      = 16.0 / 9.0;
+  cam.image_width       = 400;
+  cam.samples_per_pixel = 100;
+  cam.max_depth         = 50;
+  cam.background        = color(0,0,0);
+
+  cam.vfov     = 20;
+  cam.lookfrom = point3(26,3,6);
+  cam.lookat   = point3(0,2,0);
+  cam.vup      = vec3(0,1,0);
+
+  cam.defocus_angle = 0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
+  }
+
+  cam.render(world);
+}
+
+int main(int argc, char* argv[]) {
+  char* out_path = nullptr;
+  if (argc >= 2 && ends_with(argv[1], ".png")) {
+    out_path = argv[1];
+  }
+  
+  char* model_path = nullptr;
+  if (argc >= 3 && ends_with(argv[2], ".obj")) {
+    model_path = argv[2];
+  }
+  
+  switch (2) {
+    case 0:  simple_light(out_path);                break;
+    case 1:  dragon(out_path, false);               break;
+    case 2:  cow(out_path);                         break;
+    case 3:  robot(out_path, false);                break;
+//    case 4:  cubes(out_path);                       break;
+//    case 5:  smiley(out_path);                      break;
+    case 6:  any_model(out_path, model_path);       break;
+    default: final_scene(out_path, 1920,   250,  4); break;
+  }
 }
 
 // robot

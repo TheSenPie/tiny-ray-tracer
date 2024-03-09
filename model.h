@@ -22,11 +22,15 @@ public:
   int primitives_count = 0;
 
   // constructor, expects a filepath to a 3D model.
-  model(const char* path) {
-    auto checker = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
-    checker_mat = make_shared<lambertian>(checker);
-    
-    checker_mat = make_shared<lambertian>(color{0.882, 0.678, 0});
+  model(const char* path)
+    : model{
+        path,
+        make_shared<lambertian>(make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9)))
+    } {}
+  
+  // ... and material
+  model(const char* path, shared_ptr<material> material) {
+    default_mat = material;
  
     load_model(path);
   }
@@ -41,7 +45,7 @@ private:
                                                        // optimization to make sure textures aren't loaded more than once.
   string directory;
 
-  shared_ptr<material> checker_mat;
+  shared_ptr<material> default_mat;
 
   // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
   void load_model(string const &path) {
@@ -159,7 +163,7 @@ private:
   shared_ptr<material> loadMaterial(aiMaterial *mat, aiTextureType type, string typeName) {
     // todo: handle the case of multiple textures for a single material
     if (mat->GetTextureCount(type) == 0) {
-      return checker_mat;
+      return default_mat;
     }
     for (int i = 0; i < mat->GetTextureCount(type); i++) {
       aiString str;

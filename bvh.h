@@ -292,33 +292,57 @@ public:
     bvh = nullptr;
   }
 
-   void set_transform(const mat4& transform)
+   void set_transform(const mat4& _tranform)
   {
+    transform = _tranform;
     inv_transform = transform.Inverted();
     // calculate world-space bounds using the new matrix
-    vec3f bmin = bvh->bounding_box().bmin, bmax = bvh->bounding_box().bmax;
-    bounds = aabb();
-    for (int i = 0; i < 8; i++) {
-      bounds.grow(TransformPosition( vec3f( i & 1 ? bmax.x() : bmin.x(),
-            i & 2 ? bmax.y() : bmin.y(), i & 4 ? bmax.z() : bmin.z() ), transform ));
+     
+    point3 min( infinity,  infinity,  infinity);
+    point3 max(-infinity, -infinity, -infinity);
+
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < 2; j++) {
+        for (int k = 0; k < 2; k++) {
+          vec3f tester{
+            i*bvh->bounding_box().bmax.x() + (1-i)*bvh->bounding_box().bmin.x(),
+            j*bvh->bounding_box().bmax.y() + (1-j)*bvh->bounding_box().bmin.y(),
+            k*bvh->bounding_box().bmax.z() + (1-k)*bvh->bounding_box().bmin.z()
+          };
+
+          TransformPosition(tester, transform);
+
+          for (int c = 0; c < 3; c++) {
+            min[c] = fmin(min[c], tester[c]);
+            max[c] = fmax(max[c], tester[c]);
+          }
+        }
+      }
     }
+    bounds = aabb(min, max);
     center = (bounds.bmax + bounds.bmin) / 2.0f;
   }
 
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
-    hit_record temp_rec;
-
-    // copy original ray, modify and pass
+    // Change the ray from world space to object space
     auto origin = TransformPosition( r.origin(), inv_transform );
     auto direction = TransformVector( r.direction(), inv_transform );
     ray rotated_r(origin, direction);
     
-    if (bvh->hit(rotated_r, ray_t, temp_rec)) {
-      rec = temp_rec;
-      return true;
-    }
-
-    return false;
+    // Determine where (if any) an intersection occurs in object space
+    if (!bvh->hit(rotated_r, ray_t, rec))
+        return false;
+        
+    // Change the intersection point from object space to world space
+    auto p = TransformPosition(rec.p, transform);
+    
+    // Change the normal from object space to world space
+    auto normal = TransformVector(rec.normal, transform);
+    
+    rec.p = p;
+    rec.normal = normal;
+    
+    return true;
   }
 
   aabb bounding_box() const override { return bounds; }
@@ -327,6 +351,7 @@ public:
   
 private:
   bvh<T>* bvh = nullptr;
+  mat4 transform; // inverse transform
   mat4 inv_transform; // inverse transform
   aabb bounds; // in world space
   point3f center; // in world space

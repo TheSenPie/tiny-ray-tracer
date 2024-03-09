@@ -1,0 +1,20 @@
+!settings
+cam.aspect_ratio      = 1.0;
+cam.image_width       =	1920;
+cam.samples_per_pixel = 50;
+cam.max_depth         = 50;
+cam.background        = color(0.5, 0.7, 1.0);
+cam.vfov              = 20;
+cam.lookfrom          = point3(5, 7, 237.0);
+cam.lookat            = point3(0, 7,0);
+cam.focus_dist        = 237.0;
+cam.vup               = vec3(0,1,0);
+cam.defocus_angle     = 0;
+
+!execution
+Mesh has: 10860 vertices;
+Mesh has: 8850 faces; At most: 26550 vertices;
+Mesh has normals: true
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/Texture_1K.jpg
+BVH construction time: 438.976ms
+Render time: 308987ms

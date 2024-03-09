@@ -1,0 +1,20 @@
+!settings
+cam.aspect_ratio      = 1;
+cam.image_width       = 1280;
+cam.samples_per_pixel = 100;
+cam.max_depth         = 50;
+cam.background        = color(0.5, 0.7, 1.0);
+cam.vfov     = 20;
+cam.lookfrom = point3(3,3,6);
+cam.lookat   = point3(0,0,0);
+cam.vup      = vec3(0,1,0);
+
+
+
+!execution
+Mesh has: 17564 vertices;
+Mesh has: 5856 faces; At most: 17568 vertices;
+Mesh has normals: true
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/cow/cow.png
+BVH construction time: 291.079ms
+Render time: 81672.9ms
