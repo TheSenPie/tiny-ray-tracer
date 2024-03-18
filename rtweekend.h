@@ -33,12 +33,21 @@ inline double degrees_to_radians(double degrees) {
 
 static std::hash<std::thread::id> hasher;
 static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+static std::exponential_distribution<double> exp_distribution(1);
 
 inline double random_double() {
   static thread_local std::mt19937 generator(
     static_cast<unsigned>(hasher(std::this_thread::get_id()))
   );
   return distribution(generator);
+}
+
+
+inline double random_double_exp() {
+  static thread_local std::mt19937 generator(
+    static_cast<unsigned>(hasher(std::this_thread::get_id()) * 10)
+  );
+  return exp_distribution(generator);
 }
 
 inline double random_double(double min, double max) {

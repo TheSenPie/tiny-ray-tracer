@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <map>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -20,18 +21,18 @@ class model {
 public:
   triangle* primitives;
   int primitives_count = 0;
+  
+  std::map<std::string, shared_ptr<material>> materials_loaded;
+  std::map<std::string, shared_ptr<texture>> textures_loaded;  // stores all the textures loaded so far,
+                                                                  // optimization to make sure textures aren't loaded more than once.
+
 
   // constructor, expects a filepath to a 3D model.
-  model(const char* path)
-    : model{
-        path,
-        make_shared<lambertian>(make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9)))
-    } {}
-  
-  // ... and material
-  model(const char* path, shared_ptr<material> material) {
-    default_mat = material;
- 
+  model(const char* path) {
+    
+    default_diffuse = make_shared<checker_texture>(0.32, color(.2,  .3, .1), color(.9, .9, .9));
+    default_emissive = make_shared<solid_color>(0, 0, 0);
+    default_mat = make_shared<lambertian>(default_diffuse);
     load_model(path);
   }
 
@@ -40,11 +41,10 @@ public:
   }
 
 private:
-  vector<shared_ptr<material>> materials_loaded;
-  vector<shared_ptr<image_texture>> textures_loaded;   // stores all the textures loaded so far,
-                                                       // optimization to make sure textures aren't loaded more than once.
   string directory;
 
+  shared_ptr<texture> default_diffuse;
+  shared_ptr<texture> default_emissive;
   shared_ptr<material> default_mat;
 
   // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
@@ -150,53 +150,96 @@ private:
       primitives[primitives_count].update_bounds();
       primitives_count++;
     }
-    
-    shared_ptr<material> final_mat;
-    // process materials
+    // process material
     aiMaterial* material = scene->mMaterials[_mesh->mMaterialIndex];
  
-    // 1. diffuse material
-    final_mat = loadMaterial(material, aiTextureType_DIFFUSE, "texture_diffuse");
-    if (!final_mat) {
-      // 2. emmisive material
-      aiColor4D emission;
-      if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_EMISSIVE, &emission) && !emission.IsBlack()) {
-        color c{emission.r, emission.g, emission.b};
-        auto difflight = make_shared<diffuse_light>(c);
-        final_mat = difflight;
-      } else {
-        // 3. default material
-        final_mat = default_mat;
-      }
-    }
-
+    auto mat = loadMaterial(material);
+    
     for (uint primitive_idx = primitives_count_old; primitive_idx < primitives_count; primitive_idx++) {
-      primitives[primitive_idx].mat = final_mat;
+      primitives[primitive_idx].mat = mat;
     }
   }
  
-  shared_ptr<material> loadMaterial(aiMaterial *mat, aiTextureType type, string typeName) {
-    // todo: handle the case of multiple textures for a single material
-    if (mat->GetTextureCount(type) == 0) {
-      return nullptr;
+  shared_ptr<material> loadMaterial(aiMaterial *mat) {
+    const auto mat_name = string{mat->GetName().C_Str()};
+    
+    if (!materials_loaded.contains(mat_name)) {
+      std::clog << "Loading material " << mat_name << std::endl;
+      auto pbr_mat = make_shared<pbr>();
+      pbr_mat->albedo = loadTexture(mat, aiTextureType_DIFFUSE);
+      pbr_mat->emit = loadTexture(mat, aiTextureType_EMISSIVE);
+      materials_loaded[mat_name] = pbr_mat;
     }
-    for (int i = 0; i < mat->GetTextureCount(type); i++) {
-      aiString str;
-      mat->GetTexture(type, i, &str);
-      std::string filename = string(str.C_Str());
-      filename = directory + '/' + filename;
-      for (unsigned int j = 0; j < textures_loaded.size(); j++) {
-        if (textures_loaded[j]->path == filename) {
-          return materials_loaded[j];
+    return materials_loaded[mat_name];
+  }
+  
+  shared_ptr<texture> loadTexture(aiMaterial *mat, aiTextureType type) {
+    const aiString mat_name = mat->GetName();
+    
+    if (mat->GetTextureCount(type) == 0) { // no texture, use color instead
+      if (type == aiTextureType_DIFFUSE) {
+        aiColor4D diffuse_color;
+        if (AI_SUCCESS == aiGetMaterialColor(mat, AI_MATKEY_COLOR_DIFFUSE, &diffuse_color)) {
+          string key{"e_c"};
+          key.append(std::to_string(diffuse_color.r));
+          key.append(std::to_string(diffuse_color.g));
+          key.append(std::to_string(diffuse_color.b));
+          if (!textures_loaded.contains(key)) {
+            textures_loaded[key] = make_shared<solid_color>(diffuse_color.r, diffuse_color.g, diffuse_color.b);
+          }
+          return textures_loaded[key];
+        } else {
+          std::clog << "ERROR: Failed to fetch color for diffuse material " << mat_name.C_Str() << std::endl;
+          return default_diffuse;
         }
       }
-      std::clog << "Loading texture at: " << filename << std::endl;
-      auto tex = make_shared<image_texture>(filename.c_str());
-      textures_loaded.push_back(tex);
-      auto mat = make_shared<lambertian>(tex);
-      materials_loaded.push_back(mat);
-      return mat;
+      if (type == aiTextureType_EMISSIVE) {
+        aiColor4D emission_color;
+        if (AI_SUCCESS == aiGetMaterialColor(mat, AI_MATKEY_COLOR_EMISSIVE, &emission_color) && !emission_color.IsBlack()) {
+          string key{"e_c"};
+          key.append(std::to_string(emission_color.r));
+          key.append(std::to_string(emission_color.g));
+          key.append(std::to_string(emission_color.b));
+          if (!textures_loaded.contains(key)) {
+            textures_loaded[key] = make_shared<solid_color>(emission_color.r, emission_color.g, emission_color.b);
+          }
+          return textures_loaded[key];
+        } else {
+          std::clog << "ERROR: Failed to fetch color for emissive material " << mat_name.C_Str() << std::endl;
+        }
+        return default_emissive;
+      }
+      return nullptr;
     }
+
+    aiString str;
+    if (AI_SUCCESS == mat->GetTexture(type, 0, &str)) {
+      std::string filename{str.C_Str()};
+      filename = directory + '/' + filename;
+      if (!textures_loaded.contains(filename)) {
+        std::clog << "Loading texture at: " << filename << std::endl;
+        textures_loaded[filename] = make_shared<image_texture>(filename.c_str());
+      }
+      return textures_loaded[filename];
+    } else {
+      std::clog << "ERROR: Failed to fetch texture path for " << mat_name.C_Str() << std::endl;
+      switch(type) {
+        case aiTextureType_DIFFUSE:
+          return default_diffuse;
+        case aiTextureType_EMISSIVE:
+          return default_emissive;
+        default:
+          return nullptr;
+      }
+    }
+
+//    aiTextureType_AMBIENT - don't need
+//    aiTextureType_DIFFUSE - try texture, if no return checkers
+//    aiTextureType_DIFFUSE_ROUGHNESS - try texture, if no return null
+//    aiTextureType_EMISSIVE - try texture, if no return black texture
+//    aiTextureType_EMISSION_COLOR - dunno
+//    aiTextureType_NORMALS - try texture, if no return null
+//    aiTextureType_METALNESS - try texture, if no return null
   }
 };
 

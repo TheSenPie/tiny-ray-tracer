@@ -292,34 +292,17 @@ public:
     bvh = nullptr;
   }
 
-   void set_transform(const mat4& _tranform)
+   void set_transform(const mat4& _transform)
   {
-    transform = _tranform;
+    transform = _transform;
     inv_transform = transform.Inverted();
     // calculate world-space bounds using the new matrix
-     
-    point3 min( infinity,  infinity,  infinity);
-    point3 max(-infinity, -infinity, -infinity);
-
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < 2; j++) {
-        for (int k = 0; k < 2; k++) {
-          vec3f tester{
-            i*bvh->bounding_box().bmax.x() + (1-i)*bvh->bounding_box().bmin.x(),
-            j*bvh->bounding_box().bmax.y() + (1-j)*bvh->bounding_box().bmin.y(),
-            k*bvh->bounding_box().bmax.z() + (1-k)*bvh->bounding_box().bmin.z()
-          };
-
-          TransformPosition(tester, transform);
-
-          for (int c = 0; c < 3; c++) {
-            min[c] = fmin(min[c], tester[c]);
-            max[c] = fmax(max[c], tester[c]);
-          }
-        }
-      }
+    vec3f bmin = bvh->bounding_box().bmin, bmax = bvh->bounding_box().bmax;
+    bounds = aabb();
+    for (int i = 0; i < 8; i++) {
+      bounds.grow(TransformPosition( vec3f( i & 1 ? bmax.x() : bmin.x(),
+            i & 2 ? bmax.y() : bmin.y(), i & 4 ? bmax.z() : bmin.z() ), transform ));
     }
-    bounds = aabb(min, max);
     center = (bounds.bmax + bounds.bmin) / 2.0f;
   }
 

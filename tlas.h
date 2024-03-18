@@ -51,7 +51,7 @@ public:
  
   void build() {
     // assign a TLASleaf node to each BLAS
-    int node_idx[256], node_indices = blas_count;
+    int node_idx[1024], node_indices = blas_count;
     nodes_used = 1;
     for (uint i = 0; i < blas_count; i++) {
       node_idx[i] = nodes_used;

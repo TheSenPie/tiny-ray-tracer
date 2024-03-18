@@ -258,6 +258,14 @@ inline vec3f unit_vector(vec3f v) {
 inline vec3f fminf( const vec3f& a, const vec3f& b ) { return vec3f{ fminf( a.x(), b.x() ), fminf( a.y(), b.y() ), fminf( a.z(), b.z() ) }; }
 inline vec3f fmaxf( const vec3f& a, const vec3f& b ) { return vec3f{ fmax( a.x(), b.x() ), fmax( a.y(), b.y() ), fmax( a.z(), b.z() ) }; }
 
+inline vec3f random_in_unit_disk_flat(double max) {
+  while(true) {
+    auto p = vec3f((random_double_exp() - 0.5) * 2.0 * max, 0, (random_double_exp() - 0.5) * 2.0 * 800);
+    return p;
+  }
+}
+
 vec3::vec3(const vec3f& other) : e{ other.x(), other.y(), other.z() } {}
+
 
 #endif

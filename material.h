@@ -94,6 +94,8 @@ private:
 
 class diffuse_light : public material {
 public:
+  double emission_intensity{1.2};
+
   diffuse_light(shared_ptr<texture> a) : emit(a) {}
   diffuse_light(color c) : emit(make_shared<solid_color>(c)) {}
   
@@ -104,11 +106,40 @@ public:
   
   
   color emitted(double u, double v, const point3& p) const override {
-    return emit->value(u, v, p);
+    return emission_intensity * emit->value(u, v, p);
   }
   
 private:
   shared_ptr<texture> emit;
+};
+
+class pbr : public material {
+public:
+  shared_ptr<texture> albedo;
+  shared_ptr<texture> emit;
+  double fuzz;
+  double emission_intensity{1.2};
+  double ir{1.45};  // Index of Refraction
+ 
+  pbr() =default;
+
+  bool scatter(const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered)
+  const override {
+    auto scatter_direction = rec.normal + random_unit_vector();
+    
+    // Catch degenerate scatter direction
+    if (scatter_direction.near_zero())
+        scatter_direction = rec.normal;
+    
+    scattered = ray(rec.p, scatter_direction);
+    attenuation = albedo->value(rec.u, rec.v, rec.p);
+    
+    return true;
+  }
+  
+  color emitted(double u, double v, const point3& p) const override {
+    return emission_intensity * emit->value(u, v, p);
+  }
 };
 
 #endif
