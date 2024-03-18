@@ -1,0 +1,26 @@
+# Blender 4.0.2 MTL File: 'EVA_01.blend'
+# www.blender.org
+
+newmtl Eva_01
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd Eva_01__Base_Color_AO_baked.png
+map_Ns Eva_01__Roughness_inverted.png
+map_refl Eva_01__Metallic.png
+map_Ke Eva_01__Emisson.png
+map_Bump -bm 1.000000 Eva_01__Normal_DirectX_rev.png
+
+newmtl lance
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd lance_Base_Color_AO_baked.png
+map_Ns lance_Roughness.png
+map_refl lance_Metallic.png
+map_Ke lance_Emisson.png
+map_Bump -bm 1.000000 lance_Normal_DirectX.png

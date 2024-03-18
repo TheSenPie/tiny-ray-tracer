@@ -1,0 +1,39 @@
+➜  tiny-ray-tracer git:(main) ✗ ./out/Debug/tiny-ray-tracer "image - robo fight high res.png"
+Mesh has: 28 vertices;
+Mesh has: 20 faces; At most: 60 vertices;
+Mesh has normals: true
+Loading material Material.002
+Mesh has: 24 vertices;
+Mesh has: 12 faces; At most: 36 vertices;
+Mesh has normals: true
+Loading material Material.001
+Mesh has: 24 vertices;
+Mesh has: 12 faces; At most: 36 vertices;
+Mesh has normals: true
+Mesh has: 24 vertices;
+Mesh has: 12 faces; At most: 36 vertices;
+Mesh has normals: true
+BVH construction time: 2.01775ms
+Mesh has: 1661 vertices;
+Mesh has: 1860 faces; At most: 5580 vertices;
+Mesh has normals: true
+Loading material lance
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/eva/lance_Base_Color_AO_baked.png
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/eva/lance_Emisson.png
+Mesh has: 27530 vertices;
+Mesh has: 41074 faces; At most: 123222 vertices;
+Mesh has normals: true
+Loading material Eva_01
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/eva/Eva_01__Base_Color_AO_baked.png
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/eva/Eva_01__Emisson.png
+BVH construction time: 2177.36ms
+Mesh has: 10860 vertices;
+Mesh has: 8850 faces; At most: 26550 vertices;
+Mesh has normals: true
+Loading material Material.001
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo__Base_Color.jpg
+Loading texture at: /Users/senpie/Documents/projects/personal/tiny-ray-tracer/assets/robo/robo__Emisson.jpeg
+BVH construction time: 441.13ms
+BVH construction time: 34.1136ms
+Rendering 1024 spheres
+Render time: 7.98364e+06ms

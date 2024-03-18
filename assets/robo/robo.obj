@@ -1,7 +1,7 @@
 # Blender 4.0.2
 # www.blender.org
 mtllib robo.mtl
-o robo
+o robot
 v -0.007800 7.999100 2.661199
 v -0.007700 8.050300 2.388999
 v -0.237000 8.009100 2.381199
