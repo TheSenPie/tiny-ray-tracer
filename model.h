@@ -66,14 +66,14 @@ private:
     directory = path.substr(0, path.find_last_of('/'));
     
     // allocate the faces array
-    uint primitives_count = calculate_number_of_faces(scene->mRootNode, scene);
+    int primitives_count = calculate_number_of_faces(scene->mRootNode, scene);
     primitives = new triangle[primitives_count];
     
     process_node(scene->mRootNode, scene);
   }
   
-  uint calculate_number_of_faces (const aiNode *node, const aiScene* scene) {
-    uint sum = 0;
+  int calculate_number_of_faces (const aiNode *node, const aiScene* scene) {
+    int sum = 0;
     
     // process all node's meshes (if any)
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
@@ -89,7 +89,7 @@ private:
     return sum;
   }
   
-  uint calculate_number_of_faces (const aiMesh* _mesh) {
+  int calculate_number_of_faces (const aiMesh* _mesh) {
     return _mesh->mNumFaces;
   }
  
@@ -111,7 +111,7 @@ private:
     std::clog << "Mesh has: " << _mesh->mNumFaces << " faces; At most: " << _mesh->mNumFaces * 3 << " vertices;" << std::endl;
     std::clog << "Mesh has normals: " << std::boolalpha << _mesh->HasNormals() << std::endl;
  
-    uint primitives_count_old = primitives_count;
+    int primitives_count_old = primitives_count;
     
     // each face is a sigle triangle
     // should have nNumFaces of trinagles in total
@@ -155,7 +155,7 @@ private:
  
     auto mat = loadMaterial(material);
     
-    for (uint primitive_idx = primitives_count_old; primitive_idx < primitives_count; primitive_idx++) {
+    for (int primitive_idx = primitives_count_old; primitive_idx < primitives_count; primitive_idx++) {
       primitives[primitive_idx].mat = mat;
     }
   }

@@ -2,11 +2,13 @@
 
 #include "bvh.h"
 
+#include <cstdlib>
+
 struct tlas_node // TLAS - Top-level Acceleration Structure
 {
   aabb bbox; // 24
-  uint left_right; // 2x16 bits
-  uint blas; // 4 // BLAS - Bottom-level Acceleration Structure, referes to BVH
+  int left_right; // 2x16 bits
+  int blas; // 4 // BLAS - Bottom-level Acceleration Structure, referes to BVH
   bool is_leaf() const { return left_right == 0; }
 };
 
@@ -19,7 +21,11 @@ public:
     blas = bvh_list;
     blas_count = N;
     // allocate TLAS nodes
-    tlas_nodes = (tlas_node*) aligned_alloc(64, sizeof(tlas_node) * N * 2);
+#if _MSC_VER >= 1900
+    tlas_nodes = (tlas_node*)_aligned_malloc(sizeof(tlas_node) * 2 * N, 64);
+#else
+    tlas_nodes = (tlas_node*)std::aligned_alloc(64, sizeof(tlas_node) * N * 2);
+#endif
     nodes_used = 2;
   }
 
@@ -53,7 +59,7 @@ public:
     // assign a TLASleaf node to each BLAS
     int node_idx[1024], node_indices = blas_count;
     nodes_used = 1;
-    for (uint i = 0; i < blas_count; i++) {
+    for (int i = 0; i < blas_count; i++) {
       node_idx[i] = nodes_used;
       tlas_nodes[nodes_used].bbox.bmin = blas[i].bounding_box().bmin;
       tlas_nodes[nodes_used].bbox.bmax = blas[i].bounding_box().bmax;
@@ -86,7 +92,7 @@ public:
  
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override {
     const tlas_node *node = &tlas_nodes[0], *stack[64];
-    uint stack_ptr = 0;
+    int stack_ptr = 0;
     auto closest_so_far = ray_t.max;
     bool hit_anything = false;
     
@@ -158,5 +164,6 @@ private:
   
   tlas_node* tlas_nodes = nullptr;
   bvh_instance<T>* blas = nullptr; // array of BLASs
-  uint nodes_used, blas_count;
+  int nodes_used;
+  int blas_count;
 };

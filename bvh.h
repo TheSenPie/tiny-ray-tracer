@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <algorithm>
+#include <cstdlib>
 
 #define BINS 128
 
@@ -16,8 +17,8 @@ struct bin { aabb bounds; int primitives_count = 0; };
 struct bvh_node // in total 32 bytes
 {
   aabb bbox; // 24
-  uint left_first; // 4
-  uint primitives_count; // 4
+  int left_first; // 4
+  int primitives_count; // 4
 	bool is_leaf() const { return primitives_count > 0; }
 	float calculate_node_cost()
 	{
@@ -34,8 +35,12 @@ public:
   bvh(T* _primtives, int N) {
     primitives_count = N;
     primitives = _primtives;
-    bvh_nodes = (bvh_node*) aligned_alloc(64, sizeof(bvh_node) * N * 2);
-    primitives_idx = new uint[N];
+#if _MSC_VER >= 1900
+    bvh_nodes = (bvh_node*)_aligned_malloc(sizeof(bvh_node) * N * 2, 64);
+#else
+    bvh_nodes = (bvh_node*) std::aligned_alloc(64, sizeof(bvh_node) * N * 2);
+#endif
+    primitives_idx = new int[N];
     build();
   }
 
@@ -75,7 +80,7 @@ public:
     // reset node pool
     nodes_used = 2;
     // populate triangle index array
-    for (uint i = 0; i < primitives_count; i++)
+    for (int i = 0; i < primitives_count; i++)
       primitives_idx[i] = i;
       
     // assign all triangles to root node
@@ -120,7 +125,7 @@ public:
   bool hit(const ray& r, interval ray_t, hit_record& rec) const override
   {
     const bvh_node *node = &bvh_nodes[0], *stack[64];
-    uint stack_ptr = 0;
+    int stack_ptr = 0;
     auto closest_so_far = ray_t.max;
     bool hit_anything = false;
  
@@ -178,12 +183,13 @@ private:
   
   bvh_node* bvh_nodes = nullptr;
   T* primitives = nullptr;
-  uint* primitives_idx = nullptr;
-  uint nodes_used, primitives_count;
+  int* primitives_idx = nullptr;
+  int nodes_used;
+  int primitives_count;
   point3f center;
 
  
-  void subdivide(uint node_idx) {
+  void subdivide(int node_idx) {
     // terminate recursion
     bvh_node& node = bvh_nodes[node_idx];
     // determine split axis using SAH
@@ -221,13 +227,13 @@ private:
     subdivide(right_child_idx);
   }
  
-  void update_node_bounds(uint node_idx) {
+  void update_node_bounds(int node_idx) {
     bvh_node& node = bvh_nodes[node_idx];
     node.bbox.bmin = vec3f(infinity, infinity, infinity);
     node.bbox.bmax = vec3f(-infinity, -infinity, -infinity);
-    for (uint first = node.left_first, i = 0; i < node.primitives_count; i++)
+    for (int first = node.left_first, i = 0; i < node.primitives_count; i++)
     {
-      uint leaf_prim_idx = primitives_idx[first + i];
+      int leaf_prim_idx = primitives_idx[first + i];
       T& leaf_prim = primitives[leaf_prim_idx];
       node.bbox.bmin = fminf( node.bbox.bmin, leaf_prim.bounding_box().bmin );
       node.bbox.bmax = fmaxf( node.bbox.bmax, leaf_prim.bounding_box().bmax );

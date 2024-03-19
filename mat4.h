@@ -194,8 +194,8 @@ public:
 mat4 operator*( const mat4& a, const mat4& b )
 {
 	mat4 r;
-	for (uint i = 0; i < 16; i += 4)
-		for (uint j = 0; j < 4; ++j)
+	for (int i = 0; i < 16; i += 4)
+		for (int j = 0; j < 4; ++j)
 		{
 			r[i + j] =
 				(a.cell[i + 0] * b.cell[j + 0]) +
@@ -208,24 +208,24 @@ mat4 operator*( const mat4& a, const mat4& b )
 mat4 operator+( const mat4& a, const mat4& b )
 {
 	mat4 r;
-	for (uint i = 0; i < 16; i += 4) r.cell[i] = a.cell[i] + b.cell[i];
+	for (int i = 0; i < 16; i += 4) r.cell[i] = a.cell[i] + b.cell[i];
 	return r;
 }
 mat4 operator*( const mat4& a, const float s )
 {
 	mat4 r;
-	for (uint i = 0; i < 16; i += 4) r.cell[i] = a.cell[i] * s;
+	for (int i = 0; i < 16; i += 4) r.cell[i] = a.cell[i] * s;
 	return r;
 }
 mat4 operator*( const float s, const mat4& a )
 {
 	mat4 r;
-	for (uint i = 0; i < 16; i++) r.cell[i] = a.cell[i] * s;
+	for (int i = 0; i < 16; i++) r.cell[i] = a.cell[i] * s;
 	return r;
 }
 bool operator==( const mat4& a, const mat4& b )
 {
-	for (uint i = 0; i < 16; i++)
+	for (int i = 0; i < 16; i++)
 		if (a.cell[i] != b.cell[i]) return false;
 	return true;
 }
