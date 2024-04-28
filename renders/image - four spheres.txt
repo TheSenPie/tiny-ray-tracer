@@ -1,0 +1,3 @@
+BVH construction time: 0.199875ms
+Rendering 5 spheres
+Render time: 779187ms

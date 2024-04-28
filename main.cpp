@@ -63,9 +63,9 @@ void final_scene(const char* out_path, int image_width, int samples_per_pixel, i
   camera cam;
 
   cam.aspect_ratio      = 16.0 / 9.0;
-  cam.image_width       = 1920;
-  cam.samples_per_pixel = 200;
-  cam.max_depth         = 50;
+  cam.image_width       = image_width;
+  cam.samples_per_pixel = samples_per_pixel;
+  cam.max_depth         = max_depth;
   cam.background        = color(0.5, 0.7, 1.0);
 
   cam.vfov     = 20;
@@ -75,6 +75,55 @@ void final_scene(const char* out_path, int image_width, int samples_per_pixel, i
 
   cam.defocus_angle = 0.6;
   cam.focus_dist    = 10.0;
+  
+  if (out_path) {
+    cam.out_path = out_path;
+  }
+
+  cam.render(world);
+  
+  delete[] spheres;
+}
+
+void four_spheres(const char* out_path, int image_width, int samples_per_pixel, int max_depth) {
+  hittable_list world;
+
+  sphere* spheres = new sphere[5];
+  int sphere_count = 0;
+  
+  auto ground_material = make_shared<lambertian>(color(0.525, 0.266, 0.635));
+  spheres[sphere_count++] = sphere{point3(0,-1000,0), 1000, ground_material};
+  
+  auto material2 = make_shared<lambertian>(color(1, 0.921, 0.698));
+  spheres[sphere_count++] = sphere{point3(-1, 1, 0), 1.0, material2};
+
+  auto material1 = make_shared<dielectric>(1.5);
+  spheres[sphere_count++] = sphere{point3(1, 1, 0), 1.0, material1};
+
+  auto material3 = make_shared<metal>(color(0.803, 0.478, 0.521), 0.0);
+  spheres[sphere_count++] = sphere{point3(-1, 3, 0), 1.0, material3};
+  
+  auto material4 = make_shared<metal>(color(0.650, 0.196, 0.345), 0.2);
+  spheres[sphere_count++] = sphere{point3(1, 3, 0), 1.0, material4};
+  
+  world.add(make_shared<bvh<sphere>>(spheres, sphere_count));
+  std::cout << "Rendering " << sphere_count << " spheres" << std::endl;
+
+  camera cam;
+
+  cam.aspect_ratio      = 1;
+  cam.image_width       = image_width;
+  cam.samples_per_pixel = samples_per_pixel;
+  cam.max_depth         = max_depth;
+  cam.background        = color(1, 0.921, 0.698);
+
+  cam.vfov     = 20;
+  cam.lookfrom = point3(0,3,15);
+  cam.lookat   = point3(0,2,0);
+  cam.vup      = vec3(0,1,0);
+
+  cam.defocus_angle = 0.1;
+  cam.focus_dist    = 15.0;
   
   if (out_path) {
     cam.out_path = out_path;
@@ -564,7 +613,7 @@ int main(int argc, char* argv[]) {
     model_path = argv[2];
   }
   
-  switch (8) {
+  switch (9) {
     case 0:  simple_light(out_path);                break;
     case 1:  dragon(out_path, false);               break;
     case 2:  cow(out_path);                         break;
@@ -574,6 +623,7 @@ int main(int argc, char* argv[]) {
     case 6:  any_model(out_path, model_path);       break;
     case 7:  eva(out_path, true);                  break;
     case 8:  robo_fight(out_path);                  break;
-    default: final_scene(out_path, 1920,   250,  4); break;
+    case 9:  four_spheres(out_path, 1920, 200, 50); break;
+    default: final_scene(out_path, 1920,   200,  50); break;
   }
 }
